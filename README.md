@@ -2,7 +2,7 @@
 
 > 三台实验舱、九个案例、一个“这颗粒子到底是什么”的挑战 —— 学生自己从轨迹里把荷质比量出来。
 
-香港教育大学（EdUHK）MSc AI & Educational Technology · **INT6067** 课程项目
+香港教育大学（EdUHK）MSc AI & Educational Technology · **INT6064** Coding and Computational Thinking（编码与计算思维）课程项目
 作者：**黄炯桦（HUANG Jionghua）** · GitHub [@BBBrandon1221](https://github.com/BBBrandon1221)
 
 ![实验舱大厅](docs/hall.png)
@@ -131,7 +131,7 @@ tools/charge_gen.py                 案例数据生成脚本
 ## 署名与致谢
 
 - **作者**：黄炯桦（HUANG Jionghua）/ [@BBBrandon1221](https://github.com/BBBrandon1221)
-- 课程：EdUHK MSc AI & Educational Technology · INT6067 学习科学相关课程的小组项目
+- 课程：EdUHK MSc AI & Educational Technology · INT6064 Coding and Computational Thinking（编码与计算思维）小组项目
 - 与作者同系列的另一个项目：[MomentumLab-INT6066](https://github.com/BBBrandon1221/MomentumLab-INT6066)（动量守恒，同一套回放框架）
 
 ## 许可

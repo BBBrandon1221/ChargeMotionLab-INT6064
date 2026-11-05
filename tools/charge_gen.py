@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ChargeMotionLab 预置算例生成器。
+ChargeMotionLab 预置案例生成器。
 
 物理：匀强磁场 B = Bz·ẑ（垂直纸面），洛伦兹力 F = q·v×B，粒子间无相互作用。
 积分器：Boris 推进器 —— 纯磁场情形下等价于把速度矢量精确旋转 ω·dt，
        |v| 逐位不变，动能漂移 ~1e-15。必须与 Unity 侧 SimulationSolver.Step
        逐行一致（double 精度、相同运算顺序），ReconcileTest 才能通过对账。
 
-输出：ChargeMotionLab_INT6067/Assets/StreamingAssets/SimData/*.json
+输出：ChargeMotionLab_INT6064/Assets/StreamingAssets/SimData/*.json
 用法：python tools/charge_gen.py
 """
 import json
@@ -17,10 +17,10 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# 工程目录 2026-11-05 改名为 ChargeMotionLab_INT6067（周三课实际编号 6067）。
+# 工程目录 2026-11-05 改名为 ChargeMotionLab_INT6064（周三课实际编号 6064）。
 # 这里按名字优先、再兜底 glob，改名后不用回来改路径。
 def _project_dir():
-    cand = os.path.join(HERE, "..", "ChargeMotionLab_INT6067")
+    cand = os.path.join(HERE, "..", "ChargeMotionLab_INT6064")
     if os.path.isdir(cand):
         return os.path.normpath(cand)
     for name in sorted(os.listdir(os.path.join(HERE, ".."))):
