@@ -1,0 +1,22 @@
+* text=auto
+
+# 代码 / 文本统一 LF，避免 Windows / macOS 来回提交整文件 diff
+*.cs      text eol=lf
+*.shader  text eol=lf
+*.json    text eol=lf
+*.unity   text eol=lf
+*.asset   text eol=lf
+*.mat     text eol=lf
+*.meta    text eol=lf
+*.md      text eol=lf
+*.txt     text eol=lf
+
+# 二进制，别做行尾转换
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.psd     binary
+*.fbx     binary
+*.obj     binary
+*.dll     binary
+*.exe     binary

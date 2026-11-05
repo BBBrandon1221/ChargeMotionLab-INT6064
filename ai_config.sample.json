@@ -1,0 +1,8 @@
+{
+  "api_key": "sk-在这里填你自己的key",
+  "model": "deepseek-chat",
+  "base_url": "https://api.deepseek.com/chat/completions",
+  "temperature": 1.0,
+  "max_tokens": 600,
+  "thinking": "disabled"
+}
