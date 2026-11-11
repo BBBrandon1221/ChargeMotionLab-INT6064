@@ -42,18 +42,21 @@ public sealed class ChargeLabHub : MonoBehaviour
     const float EnterDist = 1.05f;       // 被吸进去时停在玻璃前多远
     const float ViewDist = 2.80f;        // 观察位到舱面的距离
 
-    // 三台舱 = 三个课时。沿房间纵轴由入口往里走依次是 1 → 2 → 3，
-    // x 左右错开呈之字形：三台在出生点都能看全（不互相遮挡），走起来也像一条参观动线。
+    // 四台舱 = 四个课时。沿房间纵轴由入口往里走依次是 1 → 2 → 3 → 4，
+    // x 左右错开呈之字形：四台在出生点都能看到大致方位，走起来也像一条参观动线。
     // 站1 不要摆得离出生点太近 —— 3m 高的机柜 4m 内看会顶破画幅，边缘被裁掉很脏。
     static readonly Vector3[] StationPos =
     {
         new Vector3(-3.0f, LabRoomController.FloorY, -8.60f),   // 课时 1 转向与半径
         new Vector3(3.2f, LabRoomController.FloorY, -4.40f),    // 课时 2 控制变量
         new Vector3(-3.4f, LabRoomController.FloorY, 1.80f),    // 课时 3 未知粒子
+        // 课时 4 电场偏转：往后退需要 1.08 的半径，z 取 4.4 时北边缘 5.48 < 后墙 6.0
+        new Vector3(3.6f, LabRoomController.FloorY, 4.40f),
     };
 
     // 每台舱能切的数据集：进站后数字键 1~N 在站内切换。
     // 分组本身就是教学结构——站1 看现象、站2 做控制变量、站3 只有一道题。
+    // 站4 不走数据文件：它自己解析求解（匀强场，见 PlateFieldModule），所以是空表。
     static readonly string[][] StationDatasets =
     {
         new[] { "SimData/same_q.json", "SimData/opposite_q.json", "SimData/different_qm.json" },
@@ -63,10 +66,13 @@ public sealed class ChargeLabHub : MonoBehaviour
             "SimData/mass_diff.json", "SimData/no_field.json",
         },
         new[] { "SimData/mystery.json" },
+        new string[0],
     };
 
-    static readonly string[] StationTitleKeys = { "hub.st1.title", "hub.st2.title", "hub.st3.title" };
-    static readonly string[] StationSubKeys = { "hub.st1.sub", "hub.st2.sub", "hub.st3.sub" };
+    static readonly string[] StationTitleKeys =
+        { "hub.st1.title", "hub.st2.title", "hub.st3.title", "hub.st4.title" };
+    static readonly string[] StationSubKeys =
+        { "hub.st1.sub", "hub.st2.sub", "hub.st3.sub", "hub.st4.sub" };
 
     // 未知粒子站的正确选项（0=A 1=B 2=C 3=D），与 UILang 的 hub.mys.a~d 一一对应
     const int MysteryAnswer = 2;
@@ -74,10 +80,11 @@ public sealed class ChargeLabHub : MonoBehaviour
     // 一台舱的运行时对象。三台共用同一套几何构造，只有位置 / 数据集 / 铭牌不同。
     sealed class Station
     {
-        public int Index;                 // 1..3
+        public int Index;                 // 1..4
         public Vector3 Pos;
         public string[] Datasets;
         public bool Mystery;
+        public bool Plate;                // 第四台：进站后交给 PlateFieldModule，不走数据文件
 
         public Transform Root;
         public Transform Electron;
@@ -228,7 +235,7 @@ public sealed class ChargeLabHub : MonoBehaviour
 
         // -enterlab：进场 1.5s 后自动走一遍「走近 → 被吸进舱体」，用来给入场链路出验收图。
         // -roundtrip：再等 3s 自动 Esc 回大厅，验证往返后相机和 2.5D 取景都能恢复。
-        // -enterstation N：指定进第几台舱（默认 1），给三台舱分别出图用。
+        // -enterstation N：指定进第几台舱（默认 1，共四台），给每台舱分别出图用。
         // 人手点一次复现不了这么精确的时机，自动化又需要一条能跑通的链路。
         var argv = System.Environment.GetCommandLineArgs();
         bool roundTrip = HasArg(argv, "-roundtrip");
@@ -540,7 +547,8 @@ public sealed class ChargeLabHub : MonoBehaviour
 
         // 站内数据集：进站前先换掉 SceneBinder 的切换表，
         // 学生进去按数字键只在这台舱的算例里循环，不会串到别的课时。
-        _binder.datasetFiles = station.Datasets;
+        // 偏转靶场不用数据文件，保留原表即可（空表会让 LoadFile 无法兜底）。
+        if (station.Datasets.Length > 0) _binder.datasetFiles = station.Datasets;
         // 未知粒子站抹掉 q / m / r / T，退出时在 ReturnRoutine 里复位
         ParameterPanel.MaskSolution = station.Mystery;
         // 每次进站都从「未作答」开始，重进就是重做一遍
@@ -591,15 +599,28 @@ public sealed class ChargeLabHub : MonoBehaviour
         yield return FadeTo(1f, 0.28f);
 
         InHub = false;
-        SceneBinder.SuppressAutoFrame = false;
-        SceneBinder.InputLocked = false;
 
         if (_hoverStation != null) { _hoverStation.Hover = false; ApplyHover(_hoverStation); }
         _hoverStation = null;
 
         if (_root != null) _root.gameObject.SetActive(false);
-        ShowExperiment();
-        _binder.LoadFile(station.Datasets[0]);
+
+        if (station.Plate)
+        {
+            // 第四台舱：整个画面交给偏转靶场自己画（它自带取景、参数表和判定横幅）。
+            // 这里不能放开 SceneBinder —— 它一拿到相机就会按 json 里那两个点重新取景，
+            // 把靶场的 2D 视口整个顶掉。两条 InputLocked / SuppressAutoFrame 全程保持 true。
+            HideExperiment();
+            PlateFieldModule.ShowModule(_cam);
+        }
+        else
+        {
+            SceneBinder.SuppressAutoFrame = false;
+            SceneBinder.InputLocked = false;
+            ShowExperiment();
+            _binder.LoadFile(station.Datasets[0]);
+        }
+
         yield return new WaitForSeconds(0.18f);
 
         yield return FadeTo(0f, 0.40f);
@@ -617,6 +638,10 @@ public sealed class ChargeLabHub : MonoBehaviour
         _transitioning = true;
 
         yield return FadeTo(1f, 0.25f);
+
+        // 偏转靶场是自绘全屏模块，拖到全黑之后再收，
+        // 否则它的画面会盖在大厅的黑场之上，退出去看着像没反应。
+        PlateFieldModule.HideModule();
 
         _player.Pause();
         InHub = true;
@@ -733,6 +758,8 @@ public sealed class ChargeLabHub : MonoBehaviour
                 Datasets = StationDatasets[i],
                 // 只有一台是「未知粒子」挑战：它只有一份数据，进去就是要答案
                 Mystery = StationDatasets[i].Length == 1,
+                // 没有数据文件的那台就是自己求解的偏转靶场
+                Plate = StationDatasets[i].Length == 0,
             };
             BuildOneChamber(s);
             _stations.Add(s);
@@ -1208,7 +1235,7 @@ public sealed class ChargeLabHub : MonoBehaviour
             UIScale.Outline(rect, new Color(1f, 1f, 1f, 0.14f));
             GUI.Label(new Rect(rect.x, rect.y, rect.width, rect.height), text, _hintStyle);
         }
-        else if (!_transitioning && !InHub)
+        else if (!_transitioning && !InHub && !PlateFieldModule.Active)
         {
             if (_current != null && _current.Mystery) DrawMystery(virt);
 

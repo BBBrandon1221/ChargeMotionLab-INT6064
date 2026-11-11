@@ -14,6 +14,8 @@ public sealed class AutoShot : MonoBehaviour
     static float _delay = 4f;
     static bool _openAi;
     static string _dataset;
+    static float _seek = -1f;
+    static string _aiAsk;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Init()
@@ -28,6 +30,8 @@ public sealed class AutoShot : MonoBehaviour
             else if (args[i] == "-lang" && i + 1 < args.Length) ApplyLang(args[++i]);
             else if (args[i] == "-shotai") _openAi = true;
             else if (args[i] == "-dataset" && i + 1 < args.Length) _dataset = args[++i];
+            else if (args[i] == "-seek" && i + 1 < args.Length) float.TryParse(args[++i], out _seek);
+            else if (args[i] == "-shotaiask" && i + 1 < args.Length) _aiAsk = args[++i];
         }
 
         if (string.IsNullOrEmpty(_path)) return;
@@ -48,6 +52,51 @@ public sealed class AutoShot : MonoBehaviour
         UILang.Set(english ? UILangId.En : UILangId.Zh, false);
     }
 
+    // -shotai 开面板；再加 -shotaiask "问题" 会自动问一轮并等回复，截出真实对话
+    IEnumerator AiRoutine()
+    {
+        var panel = Object.FindObjectOfType<AIChatPanel>();
+        if (panel == null) { Debug.LogWarning("[AutoShot] 没找到 AIChatPanel"); yield break; }
+
+        panel.OpenPanel();
+        Debug.Log($"[AutoShot] -shotai 已开面板，IsOpen={panel.IsOpen}");
+        if (string.IsNullOrEmpty(_aiAsk)) yield break;
+
+        yield return new WaitForSeconds(0.5f);
+        if (!panel.Ask(_aiAsk)) { Debug.LogWarning("[AutoShot] 提问没发出去（多半是缺 key）"); yield break; }
+
+        float t = 0f;
+        while (t < 45f && panel.IsWaiting) { t += Time.unscaledDeltaTime; yield return null; }
+        Debug.Log($"[AutoShot] AI 等待 {t:F1}s，仍在等待={panel.IsWaiting}");
+        yield return new WaitForSeconds(0.8f);
+    }
+
+    // -seek T：等数据加载完后暂停播放、跳到指定物理时刻，供精确取帧
+    IEnumerator SeekRoutine(float time)
+    {
+        float t = 0f;
+        PlaybackController player = null;
+        while (t < 8f)
+        {
+            player = Object.FindObjectOfType<PlaybackController>();
+            if (player != null && player.Loader != null && player.Loader.Output != null &&
+                player.Loader.Output.frames != null && player.Loader.Output.frames.Length > 0) break;
+            t += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (player == null || player.Loader == null || player.Loader.Output == null)
+        {
+            Debug.LogWarning("[AutoShot] -seek 没等到数据，忽略");
+            yield break;
+        }
+
+        player.Pause();
+        player.Seek(time);
+        Debug.Log($"[AutoShot] 已定位到 t={time:F2}s，帧 {player.CurrentFrame}/{player.Loader.Output.frames.Length - 1}");
+        yield return null;
+    }
+
     IEnumerator Start()
     {
         // 切算例要在 SceneBinder 自己的 Start 加载之前接管，等一帧再 LoadFile 会闪一下默认算例
@@ -58,18 +107,11 @@ public sealed class AutoShot : MonoBehaviour
             if (binder != null) binder.LoadFile(_dataset);
         }
 
-        if (_openAi)
-        {
-            var panel = Object.FindObjectOfType<AIChatPanel>();
-            Debug.Log($"[AutoShot] -shotai: AIChatPanel = {(panel != null ? "找到" : "!! 没找到")}");
-            if (panel != null)
-            {
-                panel.OpenPanel();
-                Debug.Log($"[AutoShot] OpenPanel 已调用，IsOpen = {panel.IsOpen}");
-            }
-        }
+        if (_openAi) yield return AiRoutine();
 
         // 等 load + 首帧 + 可能的自动播放起步，避免截到空白画面
+        if (_seek >= 0f) yield return SeekRoutine(_seek);
+
         yield return new WaitForSeconds(_delay);
 
         ScreenCapture.CaptureScreenshot(_path);

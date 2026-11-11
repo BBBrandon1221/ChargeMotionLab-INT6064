@@ -370,6 +370,15 @@ public sealed class AIChatPanel : MonoBehaviour
 
     // ---------------- 发送 ----------------
 
+    public bool IsWaiting => _waiting;
+
+    // 供自动截图脚本用：以指定问题发起一轮对话；返回是否真的发出去了
+    public bool Ask(string question)
+    {
+        Send(question);
+        return _waiting;
+    }
+
     void Send(string question)
     {
         if (_waiting) return;

@@ -185,6 +185,12 @@ public sealed class AutoTest : MonoBehaviour
         sb.AppendLine($"参数编辑（按 P）: 反射读取不到私有字段，靠手动验");
         sb.AppendLine($"AI 面板可按 C 唤出: {(ai != null ? "已挂载 OK" : "!! 未挂载")}");
 
+        // 第四模块（平行板偏转）不走 json、不用 Canvas，只能靠这条自检确认解析解没写错。
+        // 顺带说明：这几页的物理和上面九个算例完全独立（那边是纯磁场，速率不变）。
+        sb.AppendLine();
+        sb.AppendLine("=== 第四模块 电场偏转：解析解 vs dt=2e-5 数值积分 ===");
+        sb.AppendLine(PlateFieldModule.SelfTest());
+
         Write(sb, null);
     }
 
