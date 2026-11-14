@@ -191,6 +191,10 @@ public sealed class AutoTest : MonoBehaviour
         sb.AppendLine("=== 第四模块 电场偏转：解析解 vs dt=2e-5 数值积分 ===");
         sb.AppendLine(PlateFieldModule.SelfTest());
 
+        // 第四站（默认）粒子导航员：复用同一套 Boris 积分器，自检解析落点 / 方向 / 半径 / 能量。
+        sb.AppendLine("=== 第四站 粒子导航员：Boris 圆周导航自检 ===");
+        sb.AppendLine(ParticleNavigatorModule.SelfTest());
+
         Write(sb, null);
     }
 
