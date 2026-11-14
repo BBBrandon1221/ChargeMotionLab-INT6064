@@ -84,7 +84,8 @@ public sealed class ChargeLabHub : MonoBehaviour
         public Vector3 Pos;
         public string[] Datasets;
         public bool Mystery;
-        public bool Plate;                // 第四台：进站后交给 PlateFieldModule，不走数据文件
+        public bool Navigator;            // 第四台：进站后交给 ParticleNavigatorModule（磁场导航挑战）
+        public bool Plate;                // 第四台（-plate 兼容）：交给 PlateFieldModule，不走数据文件
 
         public Transform Root;
         public Transform Electron;
@@ -144,6 +145,7 @@ public sealed class ChargeLabHub : MonoBehaviour
 
     Vector2? _spawnOverride;
     float? _yawOverride;
+    bool _forcePlate;                    // -plate：第四站退回旧的平行板靶场（保留小组原模块）
 
     readonly Dictionary<string, Material> _matCache = new Dictionary<string, Material>();
     readonly List<TextMesh> _texts = new List<TextMesh>();
@@ -177,6 +179,7 @@ public sealed class ChargeLabHub : MonoBehaviour
         bool startHub = HasArg(args, "-starthub");
         bool noHub = HasArg(args, "-nohub");
         bool automated = HasArg(args, "-autotest") || HasArg(args, "-autoshot");
+        _forcePlate = HasArg(args, "-plate");
 
         // 验收 / 截图脚本默认不进大厅，保持原有行为；要看大厅显式加 -starthub
         _enabled = !noHub && (startHub || !automated);
@@ -605,11 +608,16 @@ public sealed class ChargeLabHub : MonoBehaviour
 
         if (_root != null) _root.gameObject.SetActive(false);
 
-        if (station.Plate)
+        if (station.Navigator)
         {
-            // 第四台舱：整个画面交给偏转靶场自己画（它自带取景、参数表和判定横幅）。
-            // 这里不能放开 SceneBinder —— 它一拿到相机就会按 json 里那两个点重新取景，
-            // 把靶场的 2D 视口整个顶掉。两条 InputLocked / SuppressAutoFrame 全程保持 true。
+            // 第四站（默认）：整个画面交给粒子导航员自己画。
+            // 同样不能放开 SceneBinder —— 它一拿到相机就会按 json 重新取景，把 2D 视口顶掉。
+            HideExperiment();
+            ParticleNavigatorModule.ShowModule(_cam);
+        }
+        else if (station.Plate)
+        {
+            // -plate 兼容入口：旧的平行板偏转靶场，保留小组原模块。
             HideExperiment();
             PlateFieldModule.ShowModule(_cam);
         }
@@ -639,8 +647,9 @@ public sealed class ChargeLabHub : MonoBehaviour
 
         yield return FadeTo(1f, 0.25f);
 
-        // 偏转靶场是自绘全屏模块，拖到全黑之后再收，
+        // 自绘全屏模块（导航员 / 偏转靶场）拖到全黑之后再收，
         // 否则它的画面会盖在大厅的黑场之上，退出去看着像没反应。
+        ParticleNavigatorModule.HideModule();
         PlateFieldModule.HideModule();
 
         _player.Pause();
@@ -758,8 +767,9 @@ public sealed class ChargeLabHub : MonoBehaviour
                 Datasets = StationDatasets[i],
                 // 只有一台是「未知粒子」挑战：它只有一份数据，进去就是要答案
                 Mystery = StationDatasets[i].Length == 1,
-                // 没有数据文件的那台就是自己求解的偏转靶场
-                Plate = StationDatasets[i].Length == 0,
+                // 没有数据文件的那台是第四站：默认进粒子导航员；带 -plate 时退回平行板靶场
+                Navigator = StationDatasets[i].Length == 0 && !_forcePlate,
+                Plate = StationDatasets[i].Length == 0 && _forcePlate,
             };
             BuildOneChamber(s);
             _stations.Add(s);
@@ -1235,7 +1245,7 @@ public sealed class ChargeLabHub : MonoBehaviour
             UIScale.Outline(rect, new Color(1f, 1f, 1f, 0.14f));
             GUI.Label(new Rect(rect.x, rect.y, rect.width, rect.height), text, _hintStyle);
         }
-        else if (!_transitioning && !InHub && !PlateFieldModule.Active)
+        else if (!_transitioning && !InHub && !PlateFieldModule.Active && !ParticleNavigatorModule.Active)
         {
             if (_current != null && _current.Mystery) DrawMystery(virt);
 

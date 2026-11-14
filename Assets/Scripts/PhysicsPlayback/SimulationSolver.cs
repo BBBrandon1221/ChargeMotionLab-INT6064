@@ -242,6 +242,28 @@ public static class SimulationSolver
         return new Result { Output = output };
     }
 
+    // ---------- 供导航关卡复用的单步推进 ----------
+    //
+    // 第四站「粒子导航员」要在自己的场地里实时预览轨迹；每拖一次滑块就让 Solve()
+    // 生成几千帧会把交互拖卡（GC 抖动）。这里把 Step() 的核心旋转单独暴露出来，
+    // 数学与 Step()/charge_gen.py 完全一致：纯磁场下 Boris 是精确旋转，|v| 不变。
+    // 调用方自己负责边界与命中判定，这里只管把速度、位置往前推一步。
+    public static void BorisStep(double charge, double mass, double bz, double dt,
+        ref double x, ref double y, ref double vx, ref double vy)
+    {
+        double tz = charge * bz / mass * dt * 0.5;
+        double sz = 2.0 * tz / (1.0 + tz * tz);
+
+        double vpx = vx + vy * tz;
+        double vpy = vy - vx * tz;
+
+        vx = vx + vpy * sz;
+        vy = vy - vpx * sz;
+
+        x += vx * dt;
+        y += vy * dt;
+    }
+
     // 单步：Boris 推进（纯磁场情形 = 把速度矢量旋转 ω·dt），再处理边界兜底。
     // Boris 对纯磁场是精确的辛旋转：|v| 逐位不变，能量漂移在 1e-15 量级。
     // 必须与 charge_gen.py 的 boris_step() 逐行一致，ReconcileTest 才能通过。

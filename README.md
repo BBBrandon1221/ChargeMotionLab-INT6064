@@ -18,7 +18,10 @@
 | **① 转向与半径** | 找出转向和半径的规律 | 同种电荷 / 异种电荷 / 电荷量不同 | 找规律（pattern recognition） |
 | **② 控制变量** | 一次只改一个量 | 速度不同 / 弱场 / 强场 / 质量不同 / 无磁场 | 算法与抽象（只改一个变量，看结果怎么变） |
 | **③ 未知粒子** | 测出它的荷质比 | mystery：q、m、r、T 全部遮住 | 评估（从网格量半径，用 r = mv/(qB) 反算并验证） |
-| **④ 平行板偏转靶场** | 用电场公式把小球打进靶心 | 一块绿靶 + 四个可调参数 | 建模与试误（失败 → 调参 → 命中，抛物线随参数实时重画） |
+| **④ 粒子导航员** | 用磁场把粒子送进接收器 | 三关递进 + 预测弧线 + 前后轨迹对比 | 建模与设计（选方向 → 调半径 → 路径规划） |
+| （可选）平行板偏转靶场 | 用电场公式把小球打进靶心 | 一块绿靶 + 四个可调参数 | 建模与试误（加 `-plate` 启动进入） |
+
+> 第四站默认为**粒子导航员**（纯磁场，沿用现有 Boris 求解器）。小组原有的**平行板电场偏转靶场**完整保留：启动加 `-plate` 即回到旧入口；导航员的分镜剧本、成功/失败参数和自检见 [`docs/particle-navigator-guide.md`](docs/particle-navigator-guide.md)，平行板见 [`docs/plate-field-guide.md`](docs/plate-field-guide.md)。
 
 ![课时一](docs/lesson1.png)
 ![课时三](docs/lesson3.png)
@@ -95,6 +98,10 @@ Unity.exe -batchmode -quit -projectPath <仓库路径> \
 | 靶场 | 拖四个滑块 | 改 U / q / m / v₀，抛物线实时重画 |
 | 靶场 | `G` | 开关灰色预测线（先关掉让学生猜） |
 | 靶场 | `R` / `N` | 重置本次试射 / 随机换一个靶位 |
+| 导航员 | `空格` / `R` | 发射 / 复位 |
+| 导航员 | `G` / `V` | 开关灰色预测弧线 / 开关上一次轨迹对比 |
+| 导航员 | `1` `2` `3` / `B` | 切换三关 / 第一关翻转磁场方向 |
+| 导航员 | `N` | 第三关换一个随机接收器 |
 
 ## 命令行验收
 
@@ -163,7 +170,8 @@ Assets/
   Scripts/
     PhysicsPlayback/                ChargeLabHub（大厅四舱）/ 回放 / 网格 / 参数面板 /
                                     LabRoomController（实验室房间）/ 轨迹与理论圈 /
-                                    PlateFieldModule（第四舱：平行板偏转靶场）
+                                    ParticleNavigatorModule（第四站默认：粒子导航员）/
+                                    PlateFieldModule（第四站兼容：平行板偏转靶场）
     AI/                             DeepSeek 客户端 + 实验上下文注入
     UI/                             HUD、控制条、答题卡、主题
     AutoTest.cs / AutoShot.cs       无界面验收与截图
