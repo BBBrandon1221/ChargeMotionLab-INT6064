@@ -29,7 +29,8 @@ public static class UILang
     {
         // ---------- 左上实时数据卡 ----------
         { "hud.title",       new[] { "实时数据",   "Live data" } },
-        { "hud.time",        new[] { "时间",       "Time" } },
+        // 时间格里同时给「已转圈数 t/T」。周期是不是相等，全看这一格的比值 —— 光看时间学生换算不过来。
+        { "hud.time",        new[] { "时间 / 圈数", "Time / laps" } },
         { "hud.speed",       new[] { "速率 |v|",   "Speed |v|" } },
         { "hud.energy",      new[] { "动能",       "Kinetic E" } },
         { "hud.field",       new[] { "磁场 B",     "Field B" } },
@@ -61,6 +62,16 @@ public static class UILang
                                      "This dataset has no initial setup to edit" } },
         { "panel.recompute", new[] { "重算并播放",  "Recompute" } },
         { "panel.restore",   new[] { "恢复原案例",  "Restore original" } },
+
+        // ---------- 参数锁定的说明（课时 1 / 课时 2 面板底部） ----------
+        // 两关的差别不在功能，在「允许你动哪个量」——所以这句话必须写在面板里，
+        // 学生一打开面板就该看到，而不是靠老师口头交代。
+        { "panel.lock.all",  new[] { "本关参数已锁定。\n先看三组轨迹，把规律说出来 —— 一旦能改参数，这一步就变成试错了。",
+                                     "Parameters are locked for this lesson.\nWatch the three cases and state the rule yourself." } },
+        { "panel.lock.speed",new[] { "只有速度可以改。\n其余量全部冻结 —— 一次只改一个，才说得清是谁在起作用。",
+                                     "Speed is the only editable quantity.\nEverything else is frozen, so one change means one cause." } },
+        { "panel.lock.mystery", new[] { "未知粒子：电荷量与质量已遮住，参数不可改。\n从网格量出半径，再用 r = mv/(qB) 反推。",
+                                     "Unknown particle: q and m are hidden and locked.\nMeasure the radius on the grid, then invert r = mv/(qB)." } },
 
         { "panel.err.charge",new[] { "{0} 的电荷量不是有效数字",
                                      "{0}: charge is not a valid number" } },

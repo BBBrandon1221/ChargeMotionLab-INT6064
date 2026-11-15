@@ -238,6 +238,10 @@ public sealed class ChargeLabHub : MonoBehaviour
         // -enterstation N：指定进第几台舱（默认 1，共四台），给每台舱分别出图用。
         // 人手点一次复现不了这么精确的时机，自动化又需要一条能跑通的链路。
         var argv = System.Environment.GetCommandLineArgs();
+
+        // -shotparams：进站后强制展开参数面板，用来给「本关能改什么」出验收图。
+        if (HasArg(argv, "-shotparams")) ParameterPanel.ForceEditOpen = true;
+
         bool roundTrip = HasArg(argv, "-roundtrip");
         if (roundTrip || HasArg(argv, "-enterlab"))
         {
@@ -551,6 +555,13 @@ public sealed class ChargeLabHub : MonoBehaviour
         if (station.Datasets.Length > 0) _binder.datasetFiles = station.Datasets;
         // 未知粒子站抹掉 q / m / r / T，退出时在 ReturnRoutine 里复位
         ParameterPanel.MaskSolution = station.Mystery;
+        // 「能改哪个量」是这两个课时的分界线本身，所以由站号决定，学生进站前就定死：
+        //   ① 全锁 —— 先看完三组轨迹再说话，一放开就退化成试错；
+        //   ② 只留速度 —— 其余冻结，一次只改一个才分得清因果；
+        //   ④ 靶场走自己的滑块界面，不经过这个面板。
+        ParameterPanel.Lock = station.Index == 1 ? ParameterPanel.LockMode.All
+                            : station.Index == 2 ? ParameterPanel.LockMode.SpeedOnly
+                            : ParameterPanel.LockMode.None;
         // 每次进站都从「未作答」开始，重进就是重做一遍
         _answer = -1;
         _answerRight = false;
@@ -648,6 +659,7 @@ public sealed class ChargeLabHub : MonoBehaviour
         SceneBinder.SuppressAutoFrame = true;
         SceneBinder.InputLocked = true;
         ParameterPanel.MaskSolution = false;   // 下一站不一定是未知粒子，先复位
+        ParameterPanel.Lock = ParameterPanel.LockMode.None;   // 参数锁定同理，回大厅一律解开
 
         if (_root != null) _root.gameObject.SetActive(true);
         HideExperiment();

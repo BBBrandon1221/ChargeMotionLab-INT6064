@@ -34,9 +34,10 @@ public sealed class HUDController : MonoBehaviour
         }
 
         if (player.Loader.Output == null) return;
-        var f = player.Loader.Output.frames[player.CurrentFrame];
+        var output = player.Loader.Output;
+        var f = output.frames[player.CurrentFrame];
 
-        if (timeText) timeText.text = $"{f.time:F2} s";
+        if (timeText) timeText.text = TimeAndLaps(f, output);
 
         // 速率 |v|：每个电荷一个值，磁场版算例固定 2 个粒子，"2.0 / 2.0 m/s" 放得下。
         if (momentumText) momentumText.text = Speeds(f);
@@ -44,12 +45,43 @@ public sealed class HUDController : MonoBehaviour
         // 动能 = ½mv²。未知粒子站里 v 是给的，动能一露，m 反手就能除出来 —— 整个挑战就废了。
         if (energyText) energyText.text = ParameterPanel.MaskSolution ? "—" : $"{f.kinetic_energy:F2} J";
 
-        var scenario = player.Loader.Output.scenario;
+        var scenario = output.scenario;
         if (collisionText && scenario != null)
             collisionText.text = $"{scenario.Bz:F1} T";
 
         if (statusText)
             ApplyValidation(statusText, player.Loader.Output.analysis);
+    }
+
+    // 时间格里同时给出每个电荷已经转过的圈数 t/T。
+    //
+    // 为什么非要有这一格：周期是否相同，学生只能靠「同时转完一圈」来判断，
+    // 而画面上两颗球的位置是连续变的，肉眼数不出圈。给出 t/T 之后，
+    // speed_diff 会显示两颗球永远同值、mass_diff 立刻分成 2.00 / 1.00，
+    // 一周期的差别变成一个能读的数，不再是一句「看起来一样」。
+    static string TimeAndLaps(SimFrame frame, SimulationOutput output)
+    {
+        if (frame == null) return "—";
+
+        string head = string.Format("{0:F2} s", frame.time);
+        if (output == null) return head;
+
+        double bz = output.scenario != null ? output.scenario.Bz : 0.0;
+        if (System.Math.Abs(bz) < 1e-9) return head + " · —";   // 无磁场：没有圆周，也就没有周期
+        if (output.objects == null || output.objects.Length == 0) return head;
+
+        var laps = new System.Text.StringBuilder();
+        foreach (var obj in output.objects)
+        {
+            if (obj == null) continue;
+            double qb = System.Math.Abs((double)obj.charge * bz);
+            if (qb < 1e-9 || obj.mass <= 1e-9) continue;
+            double period = 2.0 * System.Math.PI * obj.mass / qb;
+            if (laps.Length > 0) laps.Append('/');
+            laps.Append((frame.time / period).ToString("F2"));
+        }
+
+        return laps.Length == 0 ? head : head + " · " + laps;
     }
 
     static string Speeds(SimFrame frame)

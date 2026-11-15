@@ -27,10 +27,33 @@ public sealed class ParameterPanel : MonoBehaviour
     // 这是静态开关而不是场景字段：大厅进站前设一次，退出时复位。
     public static bool MaskSolution;
 
+    // 每堂课「允许动哪个量」本身就是教学设计，所以由大厅按站设置，不放在场景里。
+    // 课时 1 全锁：先看现象再归纳，一放开就变成试错。
+    // 课时 2 只留速度：其余量冻结，学生物理上不可能一次改两个，控制变量由界面替他守住。
+    public enum LockMode { None, All, SpeedOnly }
+    public static LockMode Lock;
+
+    // 截图脚本用：-shotparams 传进来就强制展开编辑区。
+    // 人手按 P 复现不了精确时机，验收图只能靠这条开关。
+    public static bool ForceEditOpen;
+
+    // 速度的两个分量必须一起放开，否则「改速度」会偷偷把方向也改掉。
+    static bool IsLocked(string field)
+    {
+        switch (Lock)
+        {
+            case LockMode.All:       return true;
+            case LockMode.SpeedOnly: return field != "vx" && field != "vy";
+            default:                 return false;
+        }
+    }
+
     GUIStyle _textStyle;
     GUIStyle _titleStyle;
     GUIStyle _fieldStyle;
     GUIStyle _messageStyle;
+    GUIStyle _lockedStyle;     // 冻结字段的灰字
+    GUIStyle _lockTipStyle;    // 面板底部那句「本关能改什么」
     SimulationOutput _cached;
     string _cachedBody;
     float _cachedWidth = -1f;
@@ -39,6 +62,7 @@ public sealed class ParameterPanel : MonoBehaviour
 
     // ---- 编辑态 ----
     bool _editing;
+    bool _cliChecked;   // 命令行开关只查一次
     SimulationSolver.Setup _baseSetup;   // 原算例参数，编辑时以它为基准做副本
     List<Row> _rows = new List<Row>();
     string _durationText = string.Empty;
@@ -79,8 +103,19 @@ public sealed class ParameterPanel : MonoBehaviour
 
     void Update()
     {
+        // 截图脚本用：面板自己再读一次命令行，不依赖大厅那边的时序。
+        if (!_cliChecked)
+        {
+            _cliChecked = true;
+            foreach (var a in System.Environment.GetCommandLineArgs())
+            {
+                if (a == "-shotparams" || a == "-openparams") ForceEditOpen = true;
+            }
+        }
+
         // 未知粒子站：编辑区一律不开，否则学生点 P 就能从输入框里读到 q 和 m
         if (MaskSolution) { _editing = false; return; }
+        if (ForceEditOpen) { _editing = true; return; }
         if (Input.GetKeyDown(toggleEditKey)) _editing = !_editing;
     }
 
@@ -192,17 +227,52 @@ public sealed class ParameterPanel : MonoBehaviour
         };
 
         _messageStyle = new GUIStyle(_textStyle) { fontSize = Mathf.RoundToInt(fontSize * 0.85f) };
+
+        // 冻结量用灰字画在原输入框的位置上：既不消失（学生看得见数值是多少），
+        // 也不像输入框（不会想去点）。
+        _lockedStyle = new GUIStyle(_textStyle);
+        _lockedStyle.fontSize = Mathf.RoundToInt(fontSize * 0.9f);
+        _lockedStyle.alignment = TextAnchor.MiddleRight;
+        _lockedStyle.normal.textColor = UITheme.TextMuted;
+
+        _lockTipStyle = new GUIStyle(_textStyle);
+        _lockTipStyle.fontSize = Mathf.RoundToInt(fontSize * 0.82f);
+        _lockTipStyle.wordWrap = true;
+        _lockTipStyle.normal.textColor = new Color(UITheme.TextPrimary.r, UITheme.TextPrimary.g,
+                                                   UITheme.TextPrimary.b, 0.78f);
     }
 
     float MeasureEditor(float lineHeight)
     {
-        float height = 12f + 1f + 12f + lineHeight + 6f;   // 分隔线 + 小标题
-        height += _rows.Count * (FieldHeight + 8f) * 2f;   // 每球两行：标量一行、矢量分量一行
-        height += (FieldHeight + 12f) * 2f;                // B 行 + duration 行
-        height += 42f;                                     // 按钮行
+        float width = panelWidth - 28f;
+        float height = 12f + 1f + 12f;                        // 分隔线 + 上下留白
+        if (Lock == LockMode.None) height += TipHeight(UILang.T("panel.tipEdit"), width) + 6f;
+        height += _rows.Count * (FieldHeight + 8f) * 2f;      // 每球两行：标量一行、矢量分量一行
+        height += (FieldHeight + 12f) * 2f;                   // B 行 + duration 行
+        // 锁定时不画按钮，改画说明。说明会换行，必须按实际行数留高度，
+        // 否则卡片装不下、最后一句被切在卡片外面。
+        height += Lock == LockMode.None ? 42f : LockTipHeight(width) + 20f;
         if (!string.IsNullOrEmpty(_message)) height += lineHeight * 2f;
-        return height + 10f;
+        return height + 16f;
     }
+
+    // 这两句说明都是长句，宽度不够就折行，所以高度只能问样式要，不能按行数拍。
+    float TipHeight(string text, float width)
+    {
+        _messageStyle.wordWrap = true;
+        return Mathf.Max(lineHeight_Px(), _messageStyle.CalcHeight(new GUIContent(text), width));
+    }
+
+    float LockTipHeight(float width)
+    {
+        return Mathf.Max(lineHeight_Px() * 2f,
+                         _lockTipStyle.CalcHeight(new GUIContent(CurrentLockTip()), width));
+    }
+
+    string CurrentLockTip() =>
+        UILang.T(Lock == LockMode.SpeedOnly ? "panel.lock.speed" : "panel.lock.all");
+
+    float lineHeight_Px() => fontSize + 8f;
 
     void DrawEditor(float panelX, float top, float lineHeight)
     {
@@ -213,8 +283,14 @@ public sealed class ParameterPanel : MonoBehaviour
         Fill(new Rect(left, y, width, 1f), new Color(0.75f, 0.78f, 0.83f, 1f));
         y += 12f;
 
-        GUI.Label(new Rect(left, y, width, lineHeight), UILang.T("panel.tipEdit"), _messageStyle);
-        y += lineHeight + 6f;
+        // 「改完点重算」这句只在能改的时候有意义；锁定时它和现状矛盾，直接不画。
+        if (Lock == LockMode.None)
+        {
+            var tipText = UILang.T("panel.tipEdit");
+            float tipH = TipHeight(tipText, width);
+            GUI.Label(new Rect(left, y, width, tipH), tipText, _messageStyle);
+            y += tipH + 6f;
+        }
 
         if (_baseSetup == null || _rows.Count == 0)
         {
@@ -233,33 +309,44 @@ public sealed class ParameterPanel : MonoBehaviour
 
             // 第一行：电荷 + 质量。电荷排最前 —— 正负号是这一版的核心变量。
             cx = left + 70f;
-            cx = DrawField(cx, y, "q", ref row.charge);
-            DrawField(cx, y, "m", ref row.mass);
+            cx = DrawField(cx, y, "q", ref row.charge, "q");
+            DrawField(cx, y, "m", ref row.mass, "m");
             y += FieldHeight + 8f;
 
             cx = left + 70f;
-            cx = DrawField(cx, y, "vx", ref row.vx);
-            cx = DrawField(cx, y, "vy", ref row.vy);
-            cx = DrawField(cx, y, "x0", ref row.x0);
-            DrawField(cx, y, "y0", ref row.y0);
+            cx = DrawField(cx, y, "vx", ref row.vx, "vx");
+            cx = DrawField(cx, y, "vy", ref row.vy, "vy");
+            cx = DrawField(cx, y, "x0", ref row.x0, "x0");
+            DrawField(cx, y, "y0", ref row.y0, "y0");
 
             y += FieldHeight + 8f;
         }
 
         // 全局磁场：所有粒子共用，单独一行放在粒子区下面
         GUI.Label(new Rect(left, y + 6f, 96f, FieldHeight), UILang.T("panel.fieldB"), _textStyle);
-        _bzText = GUI.TextField(new Rect(left + 104f, y + 6f, FieldWidth, FieldHeight),
-                                _bzText, 10, _fieldStyle);
+        DrawScalarField(new Rect(left + 104f, y + 6f, FieldWidth, FieldHeight), ref _bzText, "B");
         y += FieldHeight + 12f;
 
+        // 时长决定了「播几圈」。学生一旦能改它，圈数就成了可以随手操纵的数字，
+        // 「两颗球同时转完一圈」这个证据立刻失效 —— 所以它跟着锁定一起冻结。
         GUI.Label(new Rect(left, y + 6f, 96f, FieldHeight), "duration", _textStyle);
-        _durationText = GUI.TextField(new Rect(left + 104f, y + 6f, FieldWidth, FieldHeight),
-                                      _durationText, 10, _fieldStyle);
+        DrawScalarField(new Rect(left + 104f, y + 6f, FieldWidth, FieldHeight), ref _durationText, "duration");
         y += FieldHeight + 12f;
 
-        if (GUI.Button(new Rect(left, y, 240f, 36f), UILang.T("panel.recompute"))) ApplyEdits();
-        if (GUI.Button(new Rect(left + 250f, y, 150f, 36f), UILang.T("panel.restore"))) RestoreOriginal();
-        y += 42f;
+        if (Lock == LockMode.None)
+        {
+            if (GUI.Button(new Rect(left, y, 240f, 36f), UILang.T("panel.recompute"))) ApplyEdits();
+            if (GUI.Button(new Rect(left + 250f, y, 150f, 36f), UILang.T("panel.restore"))) RestoreOriginal();
+            y += 42f;
+        }
+        else
+        {
+            // 锁定时把按钮换成说明：学生按下 P 第一眼要看到的就是「这关为什么不能改」。
+            string tip = CurrentLockTip();
+            float lockH = LockTipHeight(width);
+            GUI.Label(new Rect(left, y, width, lockH), tip, _lockTipStyle);
+            y += lockH + 20f;
+        }
 
         if (!string.IsNullOrEmpty(_message))
         {
@@ -270,12 +357,26 @@ public sealed class ParameterPanel : MonoBehaviour
         }
     }
 
-    float DrawField(float x, float y, string label, ref string value)
+    float DrawField(float x, float y, string label, ref string value, string field)
     {
         GUI.Label(new Rect(x, y, 26f, FieldHeight), label, _textStyle);
-        var next = GUI.TextField(new Rect(x + 26f, y, FieldWidth, FieldHeight), value, 12, _fieldStyle);
-        if (next != value) value = next;
+        DrawScalarField(new Rect(x + 26f, y, FieldWidth, FieldHeight), ref value, field);
         return x + 26f + FieldWidth + 8f;
+    }
+
+    // field 既是字段名也是锁定判据：LockMode 决定这个量这一关能不能动。
+    void DrawScalarField(Rect rect, ref string value, string field)
+    {
+        if (!IsLocked(field))
+        {
+            var next = GUI.TextField(rect, value, 12, _fieldStyle);
+            if (next != value) value = next;
+            return;
+        }
+
+        // 冻结量照原样显示数值 —— 学生要看得见「这个数是多少，只是动不了」，
+        // 变成空白或干脆消失都会被当成加载失败。
+        GUI.Label(rect, value, _lockedStyle);
     }
 
     void ApplyEdits()
