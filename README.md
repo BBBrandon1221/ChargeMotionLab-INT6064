@@ -21,7 +21,7 @@
 | **④ 粒子导航员** | 用磁场把粒子送进接收器 | 三关递进 + 预测弧线 + 前后轨迹对比 | 建模与设计（选方向 → 调半径 → 路径规划） |
 | （可选）平行板偏转靶场 | 用电场公式把小球打进靶心 | 一块绿靶 + 四个可调参数 | 建模与试误（加 `-plate` 启动进入） |
 
-> 第四站默认为**粒子导航员**（纯磁场，沿用现有 Boris 求解器）。小组原有的**平行板电场偏转靶场**完整保留：启动加 `-plate` 即回到旧入口；导航员的分镜剧本、成功/失败参数和自检见 [`docs/particle-navigator-guide.md`](docs/particle-navigator-guide.md)，平行板见 [`docs/plate-field-guide.md`](docs/plate-field-guide.md)。
+> 第四站默认为**粒子导航员**（纯磁场，沿用现有 Boris 求解器）。小组原有的**平行板电场偏转靶场**完整保留：启动加 `-plate` 即回到旧入口；导航员的分镜剧本、成功/失败参数和自检见 [`docs/particle-navigator-guide.md`](docs/particle-navigator-guide.md)，平行板见 [`docs/plate-field-guide.md`](docs/plate-field-guide.md)。**前三站的逐步操作手册（怎么进站、每步点哪里、看到什么算懂、常见问题）见 [`docs/lesson-1-3-guide.md`](docs/lesson-1-3-guide.md)。**
 
 ![课时一](docs/lesson1.png)
 ![课时三](docs/lesson3.png)
@@ -118,6 +118,8 @@ q/m = v / (B·r) = 2 / (1 × 4) = 0.5
 | 屏幕上比的 | 半径 + 圈数 | 半径 + 圈数 | 半径（量） |
 | 结论 | 符号定方向、\|q\| 定大小 | 半径 ≠ 周期，v 只动前者 | 只能定 \|q\|/m |
 | 一句话 | 变号、变大小 | 拆开两个输出 | 倒过来用 |
+
+逐步操作、课堂提问顺序、45 分钟时间分配和常见问题，见 **[`docs/lesson-1-3-guide.md`](docs/lesson-1-3-guide.md)**。
 
 
 ## 第四课时：平行板偏转靶场
