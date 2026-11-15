@@ -66,10 +66,24 @@ public static class UILang
         // ---------- 参数锁定的说明（课时 1 / 课时 2 面板底部） ----------
         // 两关的差别不在功能，在「允许你动哪个量」——所以这句话必须写在面板里，
         // 学生一打开面板就该看到，而不是靠老师口头交代。
-        { "panel.lock.all",  new[] { "本关参数已锁定。\n先看三组轨迹，把规律说出来 —— 一旦能改参数，这一步就变成试错了。",
-                                     "Parameters are locked for this lesson.\nWatch the three cases and state the rule yourself." } },
-        { "panel.lock.speed",new[] { "只有速度可以改。\n其余量全部冻结 —— 一次只改一个，才说得清是谁在起作用。",
-                                     "Speed is the only editable quantity.\nEverything else is frozen, so one change means one cause." } },
+        { "panel.lock.all",  new[] { "本关参数已锁定 —— 能换轨迹，不能拧参数。\n三组只差电荷的符号和大小：先看，再把规律说出来。\n一旦能改参数，这一步就从观察变成试错了。",
+                                     "Parameters are locked — you switch cases, not sliders.\nThe three cases differ only in the sign and size of q.\nWatch first, state the rule after." } },
+        { "panel.lock.speed",new[] { "只有速度可以改（vx / vy 一起动）。\n电荷、质量、磁场、时长全部冻结 —— 一次只改一个，才说得清是谁在起作用。\n想比较磁场强弱或质量大小，用上面的按钮换预设。",
+                                     "Speed is the only editable quantity (vx / vy together).\nCharge, mass, field and duration are frozen, so one change means one cause.\nTo compare field or mass, switch presets above." } },
+
+        // ---------- 数据集切换条 ----------
+        // 锁定的两关里，学生唯一还能「动」的就是换哪一组预设。这条必须常驻屏幕：
+        // 只靠数字键而不给可见入口，整站看着像死界面。
+        { "panel.datasets",  new[] { "换一组轨迹（数字键 1–{0}）",
+                                     "Switch case  (keys 1–{0})" } },
+        { "ds.same_q",       new[] { "同号",     "Same sign" } },
+        { "ds.opposite_q",   new[] { "反号",     "Opposite" } },
+        { "ds.different_qm", new[] { "双倍电荷", "Double q" } },
+        { "ds.speed_diff",   new[] { "速度不同", "Speed differs" } },
+        { "ds.field_weak",   new[] { "弱场",     "Weak field" } },
+        { "ds.field_strong", new[] { "强场",     "Strong field" } },
+        { "ds.mass_diff",    new[] { "质量不同", "Mass differs" } },
+        { "ds.no_field",     new[] { "无磁场",   "No field" } },
         { "panel.lock.mystery", new[] { "未知粒子：电荷量与质量已遮住，参数不可改。\n从网格量出半径，再用 r = mv/(qB) 反推。",
                                      "Unknown particle: q and m are hidden and locked.\nMeasure the radius on the grid, then invert r = mv/(qB)." } },
 

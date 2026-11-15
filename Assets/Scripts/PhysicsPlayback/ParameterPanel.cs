@@ -54,6 +54,9 @@ public sealed class ParameterPanel : MonoBehaviour
     GUIStyle _messageStyle;
     GUIStyle _lockedStyle;     // 冻结字段的灰字
     GUIStyle _lockTipStyle;    // 面板底部那句「本关能改什么」
+    GUIStyle _barButtonStyle;  // 数据集切换按钮
+    GUIStyle _barActiveStyle;  // 当前正在看的那一组
+    GUIStyle _barHeaderStyle;  // 切换条上方的小标题
     SimulationOutput _cached;
     string _cachedBody;
     float _cachedWidth = -1f;
@@ -184,8 +187,10 @@ public sealed class ParameterPanel : MonoBehaviour
         foreach (char c in _cachedBody) if (c == '\n') lineCount++;
         float readOnlyHeight = lineCount * lineHeight + 24f;
 
+        // 锁定关的切换条常驻，不跟 _editing 走 —— 不按 P 也要看得见「还能换三组」。
+        float barHeight = HasDatasetBar() ? DatasetBarHeight() : 0f;
         float editorHeight = _editing ? MeasureEditor(lineHeight) : 0f;
-        float height = readOnlyHeight + editorHeight;
+        float height = readOnlyHeight + barHeight + editorHeight;
 
         float x = virtualWidth - panelWidth - margin;
         float y = margin;
@@ -203,7 +208,8 @@ public sealed class ParameterPanel : MonoBehaviour
         GUI.Label(new Rect(x + 14f, y + 12f + lineHeight, panelWidth - 28f, readOnlyHeight - lineHeight - 20f),
                   _cachedBody, _textStyle);
 
-        if (_editing) DrawEditor(x, y + readOnlyHeight, lineHeight);
+        if (barHeight > 0f) DrawDatasetBar(new Rect(x + 14f, y + readOnlyHeight, panelWidth - 28f, barHeight));
+        if (_editing) DrawEditor(x, y + readOnlyHeight + barHeight, lineHeight);
     }
 
     void EnsureStyles()
@@ -240,6 +246,24 @@ public sealed class ParameterPanel : MonoBehaviour
         _lockTipStyle.wordWrap = true;
         _lockTipStyle.normal.textColor = new Color(UITheme.TextPrimary.r, UITheme.TextPrimary.g,
                                                    UITheme.TextPrimary.b, 0.78f);
+
+        // 切换按钮：字号再小一档，五个按钮挤在一行也要看得清。
+        _barButtonStyle = new GUIStyle(GUI.skin.button);
+        _barButtonStyle.fontSize = Mathf.RoundToInt(fontSize * 0.78f);
+        _barButtonStyle.wordWrap = false;
+        _barButtonStyle.padding = new RectOffset(2, 2, 0, 0);
+
+        // 当前那一组用深底白字：内置皮肤没有 "selected" 态可用，
+        // 借按下态底图在浅色卡片上几乎看不出来（试过，和普通按钮一个样）。
+        // 底图由 DrawDatasetBar 自己填，这里只管文字。
+        _barActiveStyle = new GUIStyle(_barButtonStyle);
+        _barActiveStyle.normal.background = null;
+        _barActiveStyle.normal.textColor = UITheme.TextOnDark;
+        _barActiveStyle.alignment = TextAnchor.MiddleCenter;
+
+        _barHeaderStyle = new GUIStyle(_textStyle);
+        _barHeaderStyle.fontSize = Mathf.RoundToInt(fontSize * 0.78f);
+        _barHeaderStyle.normal.textColor = UITheme.TextMuted;
     }
 
     float MeasureEditor(float lineHeight)
@@ -273,6 +297,73 @@ public sealed class ParameterPanel : MonoBehaviour
         UILang.T(Lock == LockMode.SpeedOnly ? "panel.lock.speed" : "panel.lock.all");
 
     float lineHeight_Px() => fontSize + 8f;
+
+    // ---------- 数据集切换条 ----------
+
+    const float BarButtonHeight = 34f;
+    const float BarGap = 6f;
+
+    // 只有「被锁住、且本站有多组预设」时才画。
+    // 站③ 的未知粒子也锁，但只有一份数据，画一条只有一个按钮的条反而像坏了。
+    bool HasDatasetBar()
+    {
+        return Lock != LockMode.None && !MaskSolution &&
+               binder != null && binder.datasetFiles != null && binder.datasetFiles.Length > 1;
+    }
+
+    float BarHeaderHeight() => fontSize * 0.78f + 8f;
+
+    float DatasetBarHeight() => BarHeaderHeight() + BarButtonHeight + 8f;
+
+    void DrawDatasetBar(Rect rect)
+    {
+        var files = binder.datasetFiles;
+        int count = files.Length;
+
+        GUI.Label(new Rect(rect.x, rect.y, rect.width, BarHeaderHeight()),
+                  UILang.F("panel.datasets", count), _barHeaderStyle);
+
+        float top = rect.y + BarHeaderHeight();
+        float width = (rect.width - BarGap * (count - 1)) / count;
+        string current = FileName(binder.jsonFileName);
+
+        for (int i = 0; i < count; i++)
+        {
+            var button = new Rect(rect.x + i * (width + BarGap), top, width, BarButtonHeight);
+            bool active = string.Equals(FileName(files[i]), current, System.StringComparison.OrdinalIgnoreCase);
+            string label = (i + 1) + " " + DatasetLabel(files[i]);
+
+            // 当前这一组画成深底白字：学生要一眼看出自己在看哪一组。
+            if (active)
+            {
+                Fill(button, UITheme.ButtonBg);
+                GUI.Label(button, label, _barActiveStyle);
+                continue;
+            }
+
+            if (GUI.Button(button, label, _barButtonStyle)) binder.LoadFile(files[i]);
+        }
+    }
+
+    static string FileName(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return string.Empty;
+        int slash = path.LastIndexOfAny(new[] { '/', '\\' });
+        return slash >= 0 ? path.Substring(slash + 1) : path;
+    }
+
+    // 文件名 → 短标签（同号 / 反号 / 双倍电荷…）。没配标签就退回文件名本身，
+    // 免得新加数据集时界面上出现空白按钮。
+    static string DatasetLabel(string file)
+    {
+        string name = FileName(file);
+        int dot = name.LastIndexOf('.');
+        if (dot > 0) name = name.Substring(0, dot);
+
+        string key = "ds." + name;
+        string text = UILang.T(key);
+        return text == key ? name : text;
+    }
 
     void DrawEditor(float panelX, float top, float lineHeight)
     {

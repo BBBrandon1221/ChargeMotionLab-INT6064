@@ -146,6 +146,7 @@ public sealed class ChargeLabHub : MonoBehaviour
     Vector2? _spawnOverride;
     float? _yawOverride;
     bool _forcePlate;                    // -plate：第四站退回旧的平行板靶场（保留小组原模块）
+    int _startDataset = 1;               // -preset N：进站后直接打开第 N 组预设
 
     readonly Dictionary<string, Material> _matCache = new Dictionary<string, Material>();
     readonly List<TextMesh> _texts = new List<TextMesh>();
@@ -250,7 +251,13 @@ public sealed class ChargeLabHub : MonoBehaviour
         {
             int want = 1;
             for (int i = 0; i < argv.Length - 1; i++)
+            {
                 if (argv[i] == "-enterstation") int.TryParse(argv[i + 1], out want);
+                // -preset N：进站后直接打开第 N 组预设。截图脚本用 ——
+                // 切换条上的按钮没法靠命令行点，靠它才能给「点第二组」出验收图。
+                // 不能叫 -dataset：那个名字已经被 AutoShot 占作「直接指定 json 路径」。
+                if (argv[i] == "-preset") int.TryParse(argv[i + 1], out _startDataset);
+            }
 
             var target = _stations.Count > 0 ? _stations[Mathf.Clamp(want, 1, _stations.Count) - 1] : null;
             if (target != null) StartCoroutine(DelayedEnter(roundTrip, target));
@@ -637,7 +644,7 @@ public sealed class ChargeLabHub : MonoBehaviour
             SceneBinder.SuppressAutoFrame = false;
             SceneBinder.InputLocked = false;
             ShowExperiment();
-            _binder.LoadFile(station.Datasets[0]);
+            _binder.LoadFile(station.Datasets[Mathf.Clamp(_startDataset - 1, 0, Mathf.Max(0, station.Datasets.Length - 1))]);
         }
 
         yield return new WaitForSeconds(0.18f);
