@@ -1,5 +1,7 @@
 # ChargeMotionLab · 电荷在磁场中的运动
 
+[中文](README.md) · [English](README.en.md)
+
 > 三台磁场实验舱、九个案例、一个“这颗粒子到底是什么”的挑战，外加一间平行板偏转靶场 —— 学生自己从轨迹里把荷质比量出来，再用同样的电场公式把小球打进靶心。
 
 香港教育大学（EdUHK）MSc AI & Educational Technology · **INT6064** Coding and Computational Thinking（编码与计算思维）课程项目
