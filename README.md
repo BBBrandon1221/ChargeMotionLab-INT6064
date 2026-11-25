@@ -1,236 +1,234 @@
-# ChargeMotionLab · 电荷在磁场中的运动
+# ChargeMotionLab — Charged Particles in a Magnetic Field
 
-[中文](README.md) · [English](README.en.md)
+[English](README.md) · [中文](README.zh-CN.md)
 
-> 三台磁场实验舱、九个案例、一个“这颗粒子到底是什么”的挑战，外加一间平行板偏转靶场 —— 学生自己从轨迹里把荷质比量出来，再用同样的电场公式把小球打进靶心。
+> Three magnetic-field lab chambers, nine preset cases, one "what particle is this?" challenge, plus a parallel-plate deflection range. Students do not get told that a charge moving into a uniform magnetic field travels in a circle of radius *r = mv/(qB)* — they read the radius off the grid, work out the charge-to-mass ratio themselves, and then use the electric-field version of the same reasoning to land a ball on a target.
 
-香港教育大学（EdUHK）MSc AI & Educational Technology · **INT6064** Coding and Computational Thinking（编码与计算思维）课程项目
-作者：**黄炯桦（HUANG Jionghua）** · GitHub [@BBBrandon1221](https://github.com/BBBrandon1221)
+EdUHK MSc in Artificial Intelligence and Educational Technology · **INT6064** Coding and Computational Thinking — group project
+Author: **HUANG Jionghua** · GitHub [@BBBrandon1221](https://github.com/BBBrandon1221)
 
-![实验舱大厅](docs/hall.png)
+![Lab hall](docs/hall.png)
 
 ---
 
-## 这个项目在做什么
+## What the project is
 
-“电荷垂直射入匀强磁场做圆周运动、半径 r = mv/(qB)” 这条公式，讲一遍学生就忘。这里把它拆成三个课时，外加一间把同一套受力分析搬到匀强电场里的靶场。学生走进一间实验舱大厅，点开对应的舱，自己改参数、看轨迹、下结论：
+The formula *r = mv/(qB)* is forgotten within a week when it is lectured at. Here it is split into three lessons plus a range that moves the same force analysis into a uniform electric field. Students walk into a hub with four glass chambers, open one, change parameters themselves, watch the trajectory, and draw the conclusion:
 
-| 课时 | 主题 | 案例 | 认知层次 |
+| Lesson | Topic | Cases | Cognitive level |
 |---|---|---|---|
-| **① 转向与半径** | 找出转向和半径的规律 | 同种电荷 / 异种电荷 / 电荷量不同 | 找规律（pattern recognition） |
-| **② 控制变量** | 一次只改一个量 | 速度不同 / 弱场 / 强场 / 质量不同 / 无磁场 | 算法与抽象（只改一个变量，看结果怎么变） |
-| **③ 未知粒子** | 测出它的荷质比 | mystery：q、m、r、T 全部遮住 | 评估（从网格量半径，用 r = mv/(qB) 反算并验证） |
-| **④ 粒子导航员** | 用磁场把粒子送进接收器 | 三关递进 + 预测弧线 + 前后轨迹对比 | 建模与设计（选方向 → 调半径 → 路径规划） |
-| （可选）平行板偏转靶场 | 用电场公式把小球打进靶心 | 一块绿靶 + 四个可调参数 | 建模与试误（加 `-plate` 启动进入） |
+| **① Direction & radius** | Work out the rules for turning direction and radius | Same charge / opposite charge / different charge magnitude | Pattern recognition |
+| **② One variable at a time** | Change exactly one quantity | Different speed / weak field / strong field / different mass / no field | Algorithmic thinking and abstraction (change one variable, see what moves) |
+| **③ Unknown particle** | Measure the charge-to-mass ratio | Mystery particle: q, m, r and T are all hidden | Evaluation (read r off the grid, invert r = mv/(qB), check the answer) |
+| **④ Particle Navigator** | Steer a particle into a receiver using magnetic fields | Three progressive levels, predicted arc, previous-trajectory comparison | Modelling and design (pick a side → tune the radius → plan a path) |
+| *(optional)* Parallel-plate range | Land a ball on the bullseye with the electric-field formula | One green target, four adjustable parameters | Modelling and trial-and-error (launch with `-plate`) |
 
-> 第四站默认为**粒子导航员**（纯磁场，沿用现有 Boris 求解器）。小组原有的**平行板电场偏转靶场**完整保留：启动加 `-plate` 即回到旧入口；导航员的分镜剧本、成功/失败参数和自检见 [`docs/particle-navigator-guide.md`](docs/particle-navigator-guide.md)，平行板见 [`docs/plate-field-guide.md`](docs/plate-field-guide.md)。**前三站的逐步操作手册（怎么进站、每步点哪里、看到什么算懂、常见问题）见 [`docs/lesson-1-3-guide.md`](docs/lesson-1-3-guide.md)。**
+> Lesson 4 defaults to **Particle Navigator** (pure magnetic field, reusing the existing Boris solver). The group's original **parallel-plate electric-field range** is fully preserved: add `-plate` at launch to get the old entry point back. The Navigator shot list, the winning and failing parameter sets, and the self-test results are in [`docs/particle-navigator-guide.md`](docs/particle-navigator-guide.md); the plate range is in [`docs/plate-field-guide.md`](docs/plate-field-guide.md). **Step-by-step operating instructions for lessons 1–3 (how to enter a chamber, what to click, how to tell the student has understood it, and the usual problems) are in [`docs/lesson-1-3-guide.md`](docs/lesson-1-3-guide.md).**
 
-![课时一](docs/lesson1.png)
-![课时三](docs/lesson3.png)
+![Lesson 1](docs/lesson1.png)
+![Lesson 3](docs/lesson3.png)
 
-课时三是一道真正的挑战题：粒子参数被遮成 `?`，动能显示 `—`（因为动能 = ½mv²，给了 v 就能反算 m，会把答案漏出去），学生只能从网格量半径、拿 r = mv/(qB) 逐个试算，最后在四选一答题卡上作答，答对后补一句“轨迹只能定出 q/m 的比值，定不出各自的值”。
+Lesson 3 is a genuine challenge. The particle's parameters are shown as `?` and the kinetic energy reads `—` (kinetic energy is ½mv², so showing it would leak the mass). Students can only measure the radius against the grid, substitute into *r = mv/(qB)*, and answer on a four-option card. Once they get it right, the feedback adds the point that actually matters: **a trajectory only fixes the ratio |q|/m, never q and m separately.**
 
-## 课时一与课时二差在哪
+## How lessons 1 and 2 differ
 
-这两台舱的界面是同一套代码，回放逻辑、控件、取景全都一样 —— **差别只在一件事：允许你动哪个量**。这不是偷懒：学生要做的动作本来就是同一类（改一个量、看轨迹），界面没有理由长出两套。
+The two chambers run the same code — same replay logic, same widgets, same framing. **The only difference is which quantity you are allowed to move.** That is deliberate: the action the student performs is the same in both (change one quantity, watch the trajectory), so there is no reason for two different interfaces.
 
-| | 课时一（转向与半径） | 课时二（控制变量） |
+| | Lesson 1 (Direction & radius) | Lesson 2 (One variable at a time) |
 |---|---|---|
-| 能改什么 | **参数全冻结**，只能换案例 | **只改速度**（vx / vy），其余冻结 |
-| 案例数 | 3 对 | 5 组 |
-| 要得出的结论 | 电荷的**符号**决定转向，**大小**决定半径 | **周期和速度无关** |
-| 认知层次 | 先看现象，自己归纳（pattern recognition） | 一次只改一个，才说得清因果（control of variables） |
+| What you can change | **Everything is frozen**; you can only switch case | **Speed only** (vx / vy); the rest is frozen |
+| Number of cases | 3 pairs | 5 groups |
+| Conclusion to reach | The **sign** of the charge sets the turning direction; the **magnitude** sets the radius | **The period does not depend on speed** |
+| Cognitive level | Observe first, then generalise (pattern recognition) | Control one variable at a time to make causality visible (control of variables) |
 
-参数面板（`P`）底部会写明本关的规则，锁住的量用灰字显示原值 —— 看得见是多少，但改不动。面板下方还有一条**常驻的切换条**（不按 `P` 也在）：当前看的是哪一组用深底白字标出来，点一下就换，不用记数字键。
+The parameter panel (`P`) states the rule for the current lesson at the bottom, and locked quantities are shown in grey — visible in value, but not editable. Below the panel there is a **permanent case switcher** (available without pressing `P`): the active case is highlighted in inverted text, and one click switches to another.
 
-![课时一参数全锁 + 切换条](docs/st1_locked.png)
-![课时二只开速度](docs/st2_speedonly.png)
+![Lesson 1, everything locked, case switcher visible](docs/st1_locked.png)
+![Lesson 2, only speed unlocked](docs/st2_speedonly.png)
 
-**为什么课时一一个都不让改**：一旦能调参数，「先观察、后归纳」就退化成「乱试碰运气」；而且学生会带着调参的习惯进课时二，控制变量那一课就没有训练价值了。
+**Why nothing is editable in lesson 1:** the moment students can change parameters, "observe then generalise" collapses into "poke around until something happens". Worse, they carry the habit of fiddling into lesson 2, and the control-of-variables lesson loses its point.
 
-**为什么课时二只留速度**：其余的量和时长一起冻结之后，学生物理上就不可能「一次改两个」—— 控制变量从一句口头要求变成了界面约束。
+**Why only speed is left open in lesson 2:** with every other quantity and the duration frozen, it becomes physically impossible to change two things at once — the control of variables stops being a verbal instruction and becomes an interface constraint.
 
-### 用「时间 / 圈数」那一格证明周期
+### Proving the period with the time / lap-count readout
 
-周期是不是相等，光看动画看不出来：两颗球的位置是连续变的，肉眼数不出圈。所以 HUD 第一格除了时间，还给每个电荷已转的圈数 `t/T`：
+Whether two periods are equal cannot be judged from the animation: both balls move continuously, and nobody counts laps by eye. So the first HUD cell shows, besides the time, how many laps each charge has completed as `t/T`:
 
-| 打开哪个案例 | HUD 第一格 | 说明什么 |
+| Case opened | First HUD cell | What it shows |
 |---|---|---|
-| `speed_diff`（v = 1.0 / 2.5） | `6.30 s · 1.00/1.00` | 速度差 2.5 倍、半径 1.00 与 2.50，**圈数始终相等** → 周期相同 |
-| `mass_diff`（m = 1 / 2） | `12.60 s · 2.01/1.00` | 质量翻倍，**圈数立刻分开** → 周期不同 |
+| `speed_diff` (v = 1.0 / 2.5) | `6.30 s · 1.00/1.00` | Speeds differ by 2.5×, radii are 1.00 and 2.50, yet **the lap counts stay equal** → same period |
+| `mass_diff` (m = 1 / 2) | `12.60 s · 2.01/1.00` | Mass doubled, **lap counts separate immediately** → different period |
 
-![速度不同圈数相同](docs/laps_speed.png)
-![质量不同圈数不同](docs/laps_mass.png)
+![Different speeds, same lap count](docs/laps_speed.png)
+![Different masses, different lap counts](docs/laps_mass.png)
 
-`speed_diff` 里两颗球走的弧长是 6.28 m 和 15.71 m，差 2.5 倍，却在同一时刻闭合 —— 这比任何口头解释都有说服力。
+In `speed_diff` the two balls cover 6.28 m and 15.71 m of arc — a ratio of 2.5 — and still close their loops at the same instant. That is more convincing than any spoken explanation.
 
-**别把播放时长当成周期**：这份数据时长 6.30 s、周期 6.28 s，两个数挨得太近确实容易混。切到强磁场那份（`field_strong`）就一目了然：时长 6.30 s、周期 3.14 s，明显不是同一个数。
+**Do not mistake the clip duration for the period.** In this dataset the duration is 6.30 s and the period 6.28 s, which is uncomfortably close. Switch to the strong-field case (`field_strong`) and the two separate cleanly: duration 6.30 s, period 3.14 s.
 
-## 三个课时分别在验证什么
+## What each of the three lessons establishes
 
-三站是一条链：**站① 看懂（符号与大小）→ 站② 拆开（谁管节拍、谁管大小）→ 站③ 反推（从量得到的半径倒算看不到的 q/m）**。下面按站列出各案例的实际数值和它真正要立住的结论，数字都直接取自 `Assets/StreamingAssets/SimData/`。
+The three chambers form a chain: **lesson 1 reads the phenomenon (sign and magnitude) → lesson 2 separates the two outputs (what sets the beat, what sets the size) → lesson 3 inverts it (recover the invisible q/m from a measurable radius)**. The numbers below are taken directly from `Assets/StreamingAssets/SimData/`.
 
-### 课时一 · 把 q 拆成「符号」和「大小」
+### Lesson 1 — splitting q into "sign" and "magnitude"
 
-固定 B = 1.0 T、m = 1.0、|v| = 2.0 m/s，三组预设**只差电荷**：
+Fixed at B = 1.0 T, m = 1.0, |v| = 2.0 m/s. The three presets differ **only in charge**:
 
-| 案例 | 变了什么 | ball_1 | ball_2 | 证明什么 |
+| Case | What changes | ball_1 | ball_2 | What it establishes |
 |---|---|---|---|---|
-| `same_q` | 只有起点和速度方向相反 | q=+1，r=2.00，T=6.28 | q=+1，r=2.00，T=6.28 | 两个 r、T 一致 → **轨迹形状与起点无关**，只由 q、m、v、B 决定 |
-| `opposite_q` | 只有 q 的符号 | q=+1，r=2.00，T=6.28 | q=−1，r=2.00，T=6.28 | 半径、周期一模一样，只有绕向翻 → **符号是方向量，不是大小量** |
-| `different_qm` | 只有 \|q\| 的大小 | q=+1，r=2.00，1.00 圈 | q=+2，r=1.00，2.01 圈 | 电荷翻倍 → 半径和周期一起减半 → **\|q\| 越大转得越急**（与「电荷大更笨重」的直觉相反） |
+| `same_q` | Only the start point and the velocity direction are opposite | q=+1, r=2.00, T=6.28 | q=+1, r=2.00, T=6.28 | Identical r and T → **trajectory shape does not depend on where the particle starts**, only on q, m, v, B |
+| `opposite_q` | Only the sign of q | q=+1, r=2.00, T=6.28 | q=−1, r=2.00, T=6.28 | Radius and period are identical, only the winding direction flips → **the sign is a direction, not a size** |
+| `different_qm` | Only the magnitude \|q\| | q=+1, r=2.00, 1.00 lap | q=+2, r=1.00, 2.01 laps | Doubling the charge halves radius and period together → **a larger \|q\| turns more sharply**, which is the opposite of the "more charge, more sluggish" intuition |
 
-![换到反号那一组](docs/st1_switch_opposite.png)
+![Switching to the opposite-charge pair](docs/st1_switch_en.png)
 
-### 课时二 · 把半径和周期拆开
+### Lesson 2 — pulling radius and period apart
 
-| 案例 | 谁变了 | 关键数字 | 证明什么 |
+| Case | What changes | Key numbers | What it establishes |
 |---|---|---|---|
-| `speed_diff` | 两球 v = 1.0 / 2.5 | r = 1.00 / 2.50，T 都是 6.28，**圈数 1.00 / 1.00** | **速度只放大半径，节拍一点不动** —— 全课最反直觉的一帧 |
-| `field_weak` | B = 0.5（半场） | r = 4.00，T = 12.57，1.00 圈 | 场减半 → 半径翻倍、周期翻倍（r ∝ 1/B） |
-| `field_strong` | B = 2.0（双倍场） | r = 1.00，T = 3.14，**6.3 s 转 2.01 圈** | 场翻倍 → 半径减半、周期减半 |
-| `mass_diff` | m = 1 / 2 | r = 2.00 / 4.00，T = 6.28 / 12.57，**圈数 2.01 / 1.00** | 质量改的是节拍 → 两颗**不同步** |
-| `no_field` | B = 0 | 匀速直线 | 没有场就没有力（对照组） |
+| `speed_diff` | Two balls at v = 1.0 / 2.5 | r = 1.00 / 2.50, T = 6.28 both, **laps 1.00 / 1.00** | **Speed scales the radius and leaves the beat untouched** — the most counter-intuitive frame in the whole lesson |
+| `field_weak` | B = 0.5 | r = 4.00, T = 12.57, 1.00 lap | Half the field → double the radius and double the period (r ∝ 1/B) |
+| `field_strong` | B = 2.0 | r = 1.00, T = 3.14, **2.01 laps in 6.3 s** | Double the field → half the radius and half the period |
+| `mass_diff` | m = 1 / 2 | r = 2.00 / 4.00, T = 6.28 / 12.57, **laps 2.01 / 1.00** | Mass changes the beat → the two balls **fall out of step** |
+| `no_field` | B = 0 | Straight line at constant speed | No field, no force (the control case) |
 
-`speed_diff` 和 `mass_diff` 是这一课最锋利的一对：同样都是「让一颗球跑得更猛」，改 v 两颗仍齐步走，改 m 同步立刻散掉。
+`speed_diff` and `mass_diff` are the sharpest pair in the lesson: both make one ball "run harder", but changing v keeps the two in step while changing m tears the synchronisation apart immediately.
 
-### 课时三 · 从量得到的推看不到的
+### Lesson 3 — inferring the invisible from the measurable
 
-学生看到的只有半径 4.00 m（数网格）、速率 2 m/s、场强 1 T、12.6 秒转一圈；q 和 m 显示为 `?`。把 r = mv/(qB) 变形：
+All the student sees is a radius of 4.00 m (counted on the grid), a speed of 2 m/s, a field of 1 T, and one lap every 12.6 s; q and m are shown as `?`. Rearranging *r = mv/(qB)*:
 
 ```
 q/m = v / (B·r) = 2 / (1 × 4) = 0.5
 ```
 
-| 选项 | q、m | q/m | 怎么排除 |
+| Option | q, m | q/m | How to rule it out |
 |---|---|---|---|
-| A | +1、1 | 1.0 | 半径会算成 2 m，只有实测的一半 |
-| B | +2、1 | 2.0 | 半径会算成 1 m |
-| **C ✓** | +1、2 | **0.5** | 与实测 4 m 吻合，转向也对 |
-| D | −1、1 | −1.0 | 先看转向就该排除 —— 负电荷绕向相反 |
+| A | +1, 1 | 1.0 | Would give a radius of 2 m, half the measured value |
+| B | +2, 1 | 2.0 | Would give a radius of 1 m |
+| **C ✓** | +1, 2 | **0.5** | Matches the measured 4 m, and the turning direction is right |
+| D | −1, 1 | −1.0 | Ruled out by the winding direction alone — a negative charge turns the other way |
 
-真正的教学点在答对后那句提示：**轨迹只能定出 \|q\|/m 的比值，分不出 q 和 m 各是多少。**（0.5 可能是 +1/2，也可能是 +2/4，屏幕上看不出差别。）这就是荷质比概念的入口。
+The real teaching moment is the line shown after a correct answer: **a trajectory fixes only the ratio |q|/m; it cannot separate q from m.** (0.5 is equally consistent with +1/2 and +2/4, and the screen cannot tell them apart.) That is the doorway into the concept of charge-to-mass ratio.
 
-### 三站对照
+### The three lessons side by side
 
-| | 课时一 | 课时二 | 课时三 |
+| | Lesson 1 | Lesson 2 | Lesson 3 |
 |---|---|---|---|
-| 学生角色 | 看 | 动手 | 算 |
-| 动的量 | 无（q 三档预设） | 只有 v | 无（参数遮蔽） |
-| 屏幕上比的 | 半径 + 圈数 | 半径 + 圈数 | 半径（量） |
-| 结论 | 符号定方向、\|q\| 定大小 | 半径 ≠ 周期，v 只动前者 | 只能定 \|q\|/m |
-| 一句话 | 变号、变大小 | 拆开两个输出 | 倒过来用 |
+| Student's role | Watch | Manipulate | Calculate |
+| Quantity moved | None (three charge presets) | Speed only | None (parameters hidden) |
+| Compared on screen | Radius + lap count | Radius + lap count | Radius (measured) |
+| Conclusion | Sign sets direction, \|q\| sets size | Radius ≠ period; v moves only the former | Only \|q\|/m is recoverable |
+| In one phrase | Change the sign, change the size | Separate two outputs | Run it backwards |
 
-逐步操作、课堂提问顺序、45 分钟时间分配和常见问题，见 **[`docs/lesson-1-3-guide.md`](docs/lesson-1-3-guide.md)**。
+Step-by-step operation, the order of in-class questions, the 45-minute time allocation and the usual problems are in **[`docs/lesson-1-3-guide.md`](docs/lesson-1-3-guide.md)**.
 
+## Lesson 4 — the parallel-plate deflection range
 
-## 第四课时：平行板偏转靶场
+![Fourth chamber](docs/hall4.png)
 
-![第四舱](docs/hall4.png)
+The fourth chamber in the hub is a horizontally mounted parallel-plate range: two plates (upper positive, lower negative), an electron stream flowing downward between them, a ball fixed at the left end, and a green target plate at the lower right. Inside, four sliders set the voltage `U`, charge `q`, mass `m` and launch speed `v₀`; press space to fire and watch whether the ball lands on the green target or misses.
 
-大厅里第四台舱是一块水平放置的平行板偏转靶场：上下两块极板（上正下负），板间有自上而下流动的电子流（粒子效果），左端固定一枚小球，右下方放一块绿色靶板。点进去以后拖四个滑块（电压 `U`、电荷量 `q`、质量 `m`、出射速度 `v₀`），按空格发射，看小球是打在绿靶上还是偏出去。
+![Range interface](docs/plate_zh.png)
 
-![靶场界面](docs/plate_zh.png)
+**The default setup deliberately misses.** At `v₀ = 7.2` the impact point is 1.58 m to the right, so the first shot produces a red "off by 1.58 m" result card, and the red projection line (the grey dashed line is the predicted impact) shows at a glance that the landing point is right of the target.
 
-**默认开局是故意打不中的**：`v₀ = 7.2` 时落点偏右 1.58 m，第一次发射会拿到一个红色“偏了 1.58 m”的结算弹窗，红色投影线（灰色虚线是预测落点）一眼能看出落点在绿靶右侧。
+![First shot misses](docs/plate_fail.png)
 
-![第一次发射偏了](docs/plate_fail.png)
+Drag `v₀` to about 4.8 and the grey prediction line slides into the green target in real time — **the parabola is redrawn continuously as the slider moves**, so the shot can be predicted without firing — and the next shot earns a green "hit" card. To show the opposite failure, drag `v₀` down to 3.0 and the impact lands 1.21 m left of the target. The advice for the two failures is opposite (too far right: decrease; too far left: increase), so the two cards are worded separately.
 
-把 `v₀` 拖到 4.8 左右，灰色预测线会实时收进绿靶（**抛物线随滑块实时重画**，不用发射就能预判），再次发射就是绿色“命中”弹窗。想让学生看反方向的失败，把 `v₀` 继续拖到 3.0，落点会跑到绿靶左侧 1.21 m —— 左右两种失败的建议是相反的（往右偏要调小、往左偏要调大），所以弹窗文案分开写了。
+![Hit](docs/plate_success.png)
 
-![命中](docs/plate_success.png)
-
-物理量之间的关系就是课本上那条。小球从中心线水平射入极板区（入口 x = −3.2、y = 0），板间场强 `E = U/d`，加速度 `a = qU/(md)`，落到下极板内表面需要走完 Δy = 2.0 m：
+The physics is the textbook relation. The ball enters the plate region horizontally along the centre line (entry at x = −3.2, y = 0); the field between the plates is `E = U/d`, the acceleration is `a = qU/(md)`, and reaching the inner surface of the lower plate requires Δy = 2.0 m:
 
 ```
-t = √(2Δy / a)                  ← 只跟 a 有关，与 v₀ 无关
-x_落点 = −3.2 + v₀ · t
+t = √(2Δy / a)                  ← depends only on a, not on v₀
+x_impact = −3.2 + v₀ · t
 ```
 
-四个参数的方向感因此很直观：`v₀` 变大 → 落点右移；`U` 变大、`q` 变大、`m` 变小 → `a` 变大 → `t` 变短 → 落点左移。改任意一个滑块，灰色预测线立刻重画到新落点，不用发射就能预判 —— **抛物线是真的跟着滑块实时变的**。`G` 键开关预测线（课上可以先关掉让学生猜）。
+That makes the direction of each parameter obvious: a larger `v₀` moves the impact right; larger `U`, larger `q` or smaller `m` raise `a`, shorten `t` and move the impact left. Move any slider and the grey prediction line is redrawn immediately — **the parabola really does follow the slider in real time.** The `G` key toggles the prediction line, so it can be hidden in class and the students asked to guess first.
 
-详细的分镜剧本、参数参考表和判定阈值见 [`docs/plate-field-guide.md`](docs/plate-field-guide.md)。
+The full shot list, the reference parameter table and the grading thresholds are in [`docs/plate-field-guide.md`](docs/plate-field-guide.md).
 
+## Features
 
-## 功能
+**Lab hub (2.5D first person)** — four glass chambers: three magnetic-field lessons plus the deflection range. Walk with WASD, look around by dragging with the right mouse button, click a chamber or press `1/2/3/4` to enter, `Esc` to return to the hub facing the chamber you just left.
 
-**实验舱大厅（2.5D 第一人称）**：四台玻璃舱 = 三个磁场课时 + 一间偏转靶场。WASD 走动、右键环视、点舱体或按 `1/2/3/4` 进入，`Esc` 退回大厅并站在刚才那台舱前。
+**Physics replay** — driven by frame-sequence JSON, with play / pause / single-step / reset / 0.5×–4× speed; a coordinate grid with tick labels, magnetic-field symbols (⊙ out of the page, ⊗ into the page), trajectory lines and the theoretical circle for reference, velocity labels on each particle, and a live data card (speed, kinetic energy, field strength, energy-conservation check).
 
-**物理回放**：帧序列 JSON 驱动，播放 / 暂停 / 单步 / 重置 / 0.5×–4× 倍速；坐标网格与刻度、磁场符号（⊙ 出纸面 / ⊗ 入纸面）、轨迹线与理论圆参考、每颗粒子的速度标签、实时数据卡（速率、动能、磁感应强度、能量守恒校验）。
+**Parameter panel (`P`)** — change charge q, mass m, initial speed v, field strength B, time step and grid spacing, then "recompute and play" to run the solver in place. A one-click "restore case" is always available. In lesson 3 the panel masks q/m/r/T and disables the `P` key.
 
-**参数面板（`P`）**：改电荷量 q、质量 m、初速度 v、磁感应强度 B、时间步长、网格间距，点“重算并播放”就地跑求解器；`Esc` 之外还能一键“恢复原案例”。课时三的参数面板会主动遮罩 q/m/r/T 并禁用 `P` 键。
+**Parallel-plate range** — analytic rather than stepped (uniform acceleration between the plates, straight line outside), with four sliders that recompute the whole parabola in real time; the electron stream is rendered as a particle chain, and impacts are graded as hit / graze / miss.
 
-**平行板偏转靶场**：解析解驱动（板间匀加速、板外匀速直线），四个滑块实时重算整条抛物线；电子流用粒子串表现，落点分“命中 / 擦边 / 偏出”三档结算。
+**Bilingual UI** — Chinese and English, toggled with one key; both languages were run through the acceptance pass.
 
-**双语界面**：中 / 英一键切换，验收对两种语言各跑一遍。
+## Getting started
 
-## 快速开始
+1. Install **Unity 2022.3.14f1c1** (other 2022.3.x releases generally open it too).
+2. Unity Hub → Add → select this repository folder → open.
+3. Open `Assets/Scenes/Main.unity` and press Play.
 
-1. 装 **Unity 2022.3.14f1c1**（其它 2022.3.x 一般也能开）。
-2. Unity Hub → Add → 选这个仓库目录 → 打开。
-3. 打开 `Assets/Scenes/Main.unity`，按 Play。
-
-命令行出 Windows 包：
+To produce a Windows build from the command line:
 
 ```bash
-Unity.exe -batchmode -quit -projectPath <仓库路径> \
+Unity.exe -batchmode -quit -projectPath <repo-path> \
   -executeMethod BuildWin.RebuildAndBuild -logFile build.log
-# 产物：<仓库同级>/_build/Win64/ChargeMotionLab.exe
+# output: <parent-of-repo>/_build/Win64/ChargeMotionLab.exe
 ```
 
-> ⚠️ 环境里同时存在 `http_proxy` 和 `HTTP_PROXY` 会让 Unity 的 Bee 崩掉，出包前先 `unset` 掉全部代理变量。
+> ⚠️ Having both `http_proxy` and `HTTP_PROXY` set crashes Unity's Bee build backend. `unset` every proxy variable before building.
 
-## 操作
+## Controls
 
-| 场景 | 按键 | 作用 |
+| Where | Key | Action |
 |---|---|---|
-| 大厅 | `W A S D` / 右键拖动 | 走动 / 环视 |
-| 大厅 | 左键点舱体、`1` `2` `3` `4` | 进入对应课时 / 靶场 |
-| 实验里 | `P` | 参数面板（课时一全锁、课时二只开速度、课时三禁用） |
-| 课时一 / 二 | `1`…`5` 或点面板下方切换条 | 换一组预设（当前那组深底白字） |
-| 实验里 | `空格` / 按钮 | 播放 / 暂停；靶场里是“发射” |
-| 实验里 | `C` | AI 助教 |
-| 实验里 | `F5` | 重读当前 JSON |
-| 实验里 | `Esc` | 退回大厅 |
-| 靶场 | 拖四个滑块 | 改 U / q / m / v₀，抛物线实时重画 |
-| 靶场 | `G` | 开关灰色预测线（先关掉让学生猜） |
-| 靶场 | `R` / `N` | 重置本次试射 / 随机换一个靶位 |
-| 导航员 | `空格` / `R` | 发射 / 复位 |
-| 导航员 | `G` / `V` | 开关灰色预测弧线 / 开关上一次轨迹对比 |
-| 导航员 | `1` `2` `3` / `B` | 切换三关 / 第一关翻转磁场方向 |
-| 导航员 | `N` | 第三关换一个随机接收器 |
+| Hub | `W A S D` / right-drag | Walk / look around |
+| Hub | left-click a chamber, `1` `2` `3` `4` | Enter that lesson / the range |
+| In a lesson | `P` | Parameter panel (fully locked in lesson 1, speed only in lesson 2, disabled in lesson 3) |
+| Lessons 1 & 2 | `1`…`5`, or the switcher under the panel | Change preset (the active one is in inverted text) |
+| In a lesson | `Space` / on-screen button | Play / pause (in the range: fire) |
+| In a lesson | `C` | AI tutor |
+| In a lesson | `F5` | Re-read the current JSON |
+| In a lesson | `Esc` | Back to the hub |
+| Range | Drag the four sliders | Set U / q / m / v₀; the parabola is redrawn live |
+| Range | `G` | Toggle the grey prediction line (hide it and let students guess first) |
+| Range | `R` / `N` | Reset this shot / randomise the target position |
+| Navigator | `Space` / `R` | Launch / reset |
+| Navigator | `G` / `V` | Toggle the grey predicted arc / toggle the previous-trajectory comparison |
+| Navigator | `1` `2` `3` / `B` | Switch level / flip the field direction in level 1 |
+| Navigator | `N` | Randomise the receiver in level 3 |
 
-## 命令行验收
+## Command-line acceptance checks
 
 ```bash
-ChargeMotionLab.exe -autotest D:/out.txt -lang zh
-ChargeMotionLab.exe -autoshot D:/shot.png -dataset SimData/same_q.json -shotdelay 3 -lang zh
-ChargeMotionLab.exe -autoshot D:/hall.png -starthub -shotdelay 4          # 大厅
-ChargeMotionLab.exe -autoshot D:/st3.png -starthub -enterstation 2 -shotdelay 6  # 直接进课时三
-ChargeMotionLab.exe -autoshot D:/st4.png -starthub -enterstation 4 -shotdelay 6  # 直接进第四舱靶场
+ChargeMotionLab.exe -autotest D:/out.txt -lang en
+ChargeMotionLab.exe -autoshot D:/shot.png -dataset SimData/same_q.json -shotdelay 3 -lang en
+ChargeMotionLab.exe -autoshot D:/hall.png -starthub -shotdelay 4          # hub
+ChargeMotionLab.exe -autoshot D:/st3.png -starthub -enterstation 2 -shotdelay 6  # straight into lesson 3
+ChargeMotionLab.exe -autoshot D:/st4.png -starthub -enterstation 4 -shotdelay 6  # straight into the plate range
 ChargeMotionLab.exe -autoshot D:/hit.png -starthub -enterstation 4 -platefire \
-  -plateparams 40,1,1,4.8 -shotdelay 8                                   # 调好参数自动打一次
+  -plateparams 40,1,1,4.8 -shotdelay 8                                   # fire once with the parameters set
 ChargeMotionLab.exe -autoshot D:/lock.png -starthub -enterstation 1 -openparams \
-  -shotdelay 11                                                          # 强制展开参数面板（看锁定状态）
+  -shotdelay 11                                                          # force the panel open to inspect the locks
 ChargeMotionLab.exe -autoshot D:/p2.png -starthub -enterlab -enterstation 1 -preset 2 \
-  -shotdelay 11                                                          # 进课时一后直接打开第 2 组预设
+  -shotdelay 11                                                          # open preset 2 in lesson 1
 ```
 
-⚠️ `-autoshot` 会让大厅默认处于关闭状态（保持老脚本的行为）。**要进舱、要看参数锁定，必须显式加 `-starthub`** —— 只写 `-enterstation 2` 是不会进站的，画面会停在单一实验房间里，看着像成功其实没进站。
+⚠️ `-autoshot` leaves the hub closed by default (to keep the older scripts working). **To enter a chamber, and to see the parameter locks, `-starthub` must be passed explicitly** — `-enterstation 2` on its own does not enter the chamber; the capture stays in the single-room view and looks like a success when it is not.
 
-`-preset N` 是「进站后打开第 N 组预设」，和 `-dataset <路径>`（AutoShot 直接指定 json 文件）不是一回事，名字故意分开。
+`-preset N` means "open preset N after entering", which is not the same as `-dataset <path>` (an explicit JSON file for AutoShot); the two names are kept apart on purpose.
 
-路径请给**绝对路径**（相对路径会被 `ScreenCapture` 写到 persistentDataPath）。
+Always pass **absolute paths** — relative paths are resolved against `persistentDataPath` by `ScreenCapture`.
 
-## 数据与生成脚本
+## Data and the generator
 
-九个案例的数据在 `Assets/StreamingAssets/SimData/`，由 `tools/charge_gen.py` 生成（纯 Python，无第三方依赖）：
+The nine cases live in `Assets/StreamingAssets/SimData/` and are generated by `tools/charge_gen.py` (pure Python, no third-party dependencies):
 
 ```bash
-python tools/charge_gen.py      # 重新生成全部案例，输出到 Assets/StreamingAssets/SimData/
+python tools/charge_gen.py      # regenerate every case into Assets/StreamingAssets/SimData/
 ```
 
-脚本按目录名探测工程位置（改工程目录名不用改脚本）。数据结构与 MomentumLab 同源：
+The script locates the project by looking for the directory name, so renaming the project folder does not break it. The data format is shared with MomentumLab:
 
 ```json
 { "scenario": { "mode": "2d", "time_step": 0.01, "duration": 6.3, "Bz": 1.0,
@@ -244,55 +242,70 @@ python tools/charge_gen.py      # 重新生成全部案例，输出到 Assets/St
   "analysis": { "validation": "pass", "relative_momentum_error": 0.0 } }
 ```
 
-磁场垂直于运动平面（`Bz`），洛伦兹力不做功，所以动能应当整段不变——这也是 `-autotest` 里“能量守恒 ✓ 通过”那条判据的来源。
+The magnetic field is perpendicular to the plane of motion (`Bz`), so the Lorentz force does no work and the kinetic energy must stay constant for the whole clip — which is exactly what the "energy conservation ✓" check in `-autotest` asserts.
 
-## 踩过的坑
+## Pitfalls we hit
 
-打包后**内置 shader 变体会被剥离**，症状是“编辑器里好好的，exe 里全没了”。这个项目踩了三类，最后都改成自写 shader 放 `Assets/Resources/Shaders/`，用 `Resources.Load<Shader>` 加载：
+**Built-in shader variants are stripped from player builds.** The symptom is "fine in the editor, gone in the exe". This project hit three classes of it and ended up writing its own shaders in `Assets/Resources/Shaders/`, loaded with `Resources.Load<Shader>`:
 
-- Standard 的 `_EMISSION` 关键字（自发光灯带、指示灯）→ `ChargeLab/Glow`
-- Standard 透明混合（玻璃舱罩）→ `ChargeLab/ChamberGlass`
-- `Sprites/Default` 被剥掉，兜底 `Unlit/Color` 不读顶点色 → 所有 LineRenderer 画成白色、在浅色背景上隐形 → `ChargeLab/LineColor`
+- Standard's `_EMISSION` keyword (glowing strips, indicator lights) → `ChargeLab/Glow`
+- Standard's transparent blend (the glass chamber covers) → `ChargeLab/ChamberGlass`
+- `Sprites/Default` stripped, with the `Unlit/Color` fallback ignoring vertex colours → every LineRenderer drawn white and therefore invisible on a light background → `ChargeLab/LineColor`
 
-另外两个：
+Two more:
 
-- **正交相机取景只设 `position` 不设 `rotation`**：从大厅进来时相机带着“站在某台舱前”的朝向，正交一斜视物理平面就侧对出去，画面全空。取景必须先把 `rotation` 摆正。
-- **取景用到启动那一帧的纵横比**（启动瞬间窗口可能是竖条），正交尺寸会一直偏大一圈 → 缓存首帧 aspect，之后每帧比对，变了重新取景。
+- **An orthographic camera framed by setting `position` but not `rotation`.** Coming in from the hub, the camera keeps the "standing in front of a chamber" orientation; the moment the projection turns orthographic and that orientation is oblique, the physical plane is seen edge-on and the screen goes empty. Framing has to straighten `rotation` first.
+- **Framing using the aspect ratio of the very first frame** (the window can be a narrow strip at launch), which leaves the orthographic size permanently a size too large. Cache the first-frame aspect, compare every frame afterwards, and re-frame when it changes.
 
-第四模块补的三条：
+Three more from the fourth module:
 
-- **背景的 z 写反了**：相机在 z = −12 朝 +z 看，背景板若写在 −1.2 就是贴在镜头前面，整屏一片灰。背景要放到极板之后（z = +0.60）。
-- **`GUI.skin.label` 默认文字是浅灰**，浅色背景上参数表的标签几乎看不见 → 每个 `GUIStyle` 都要显式设 `normal.textColor`。
-- **弹窗卡片用固定高度会被英文撑破** → 高度按 `CalcHeight` 自适应，标题超宽时字号从 30 递减到 20 找能放下的那一档。
+- **The background's z was inverted.** The camera sits at z = −12 looking towards +z, so a backdrop at −1.2 is in front of the lens and the whole screen turns grey. The backdrop belongs behind the plates (z = +0.60).
+- **`GUI.skin.label` is light grey by default**, so the labels in the parameter table are nearly invisible on a light background. Every `GUIStyle` needs `normal.textColor` set explicitly.
+- **Fixed-height cards break when the English text is longer.** Height has to come from `CalcHeight`, and when the title overflows the font size steps down from 30 to 20 until it fits.
 
-## 目录结构
+## Repository layout
 
 ```
 Assets/
   Scenes/Main.unity
-  Editor/BuildWin.cs                batchmode 构建入口
-  Editor/PlaybackSceneBuilder.cs    场景由代码生成
+  Editor/
+    BuildWin.cs                    batch-mode build entry point
+    PlaybackSceneBuilder.cs        the scene is generated from code
+    ReconcileTest.cs / UIAudit.cs  layout reconciliation and UI audit checks
   Scripts/
-    PhysicsPlayback/                ChargeLabHub（大厅四舱）/ 回放 / 网格 / 参数面板 /
-                                    LabRoomController（实验室房间）/ 轨迹与理论圈 /
-                                    ParticleNavigatorModule（第四站默认：粒子导航员）/
-                                    PlateFieldModule（第四站兼容：平行板偏转靶场）
-    AI/                             DeepSeek 客户端 + 实验上下文注入
-    UI/                             HUD、控制条、答题卡、主题
-    AutoTest.cs / AutoShot.cs       无界面验收与截图
-  Resources/Shaders/                自写 shader（Glow / ChamberGlass / LineColor）
-  StreamingAssets/SimData/          九个案例的数据
-docs/                               截图 + 第四模块说明（plate-field-guide.md）
-tools/charge_gen.py                 案例数据生成脚本
+    PhysicsPlayback/
+      ChargeLabHub.cs              the hub and its four chambers
+      LabRoomController.cs         a single lesson room
+      PlaybackController.cs        frame-sequence replay
+      SimulationLoader.cs / SimulationSolver.cs /
+      SimulationSchema.cs / SimulationFileResolver.cs
+      PhysicsGrid.cs / SpeedLabels.cs / TrajectoryOverlay.cs
+      ParameterPanel.cs            the P panel, locking rules per lesson
+      HUDController.cs             HUD, control bar, answer card
+      ControlBarState.cs / UISpeedControl.cs / UITheme.cs / UIScale.cs
+      ParticleNavigatorModule.cs   lesson 4, default mode
+      PlateFieldModule.cs          the parallel-plate deflection range
+    AI/                            DeepSeekClient / AIChatPanel / AIConfig /
+                                   ExperimentContext
+    AutoTest.cs / AutoShot.cs      headless acceptance and screenshots
+    LocalizedText.cs / UILang.cs / UILangButton.cs   the bilingual UI
+  Resources/Shaders/               hand-written shaders (Glow / ChamberGlass / LineColor)
+  StreamingAssets/SimData/         the nine case files (same_q, opposite_q, different_qm,
+                                   speed_diff, field_weak, field_strong, mass_diff,
+                                   no_field, mystery)
+docs/                              screenshots + module notes (plate-field-guide.md,
+                                   particle-navigator-guide.md, lesson-1-3-guide.md)
+tools/charge_gen.py                case generator
 ```
 
-## 署名与致谢
+> Note on the interface code: the HUD, control bar, parameter panel and theme live **inside `PhysicsPlayback/`** rather than in a separate `UI/` folder — the layout checks in `Editor/ReconcileTest.cs` and `Editor/UIAudit.cs` assume that arrangement.
 
-- **作者**：黄炯桦（HUANG Jionghua）/ [@BBBrandon1221](https://github.com/BBBrandon1221)
-- 课程：EdUHK MSc AI & Educational Technology · INT6064 Coding and Computational Thinking（编码与计算思维）小组项目
-- 与作者同系列的另一个项目：[MomentumLab-INT6066](https://github.com/BBBrandon1221/MomentumLab-INT6066)（动量守恒，同一套回放框架）
+## Credits
 
-## 许可
+- **Author:** HUANG Jionghua / [@BBBrandon1221](https://github.com/BBBrandon1221)
+- Course: EdUHK MSc in AI and Educational Technology · INT6064 Coding and Computational Thinking — group project
+- Companion project by the same author: [MomentumLab-INT6066](https://github.com/BBBrandon1221/MomentumLab-INT6066) (conservation of momentum, built on the same replay framework)
 
-课程作业代码，欢迎 fork、阅读、拿去改自己的教学项目，**保留作者署名**即可。
-仓库内不含任何 API key：AI 功能需要你自己把 `ai_config.sample.json` 复制成 `ai_config.json` 并填上 `sk-` 开头的 key（该文件已被 `.gitignore` 排除）。
+## Licence
+
+Coursework code. Fork it, read it, adapt it for your own teaching project — just keep the author's name. No API key is included in this repository: the AI feature needs you to copy `ai_config.sample.json` to `ai_config.json` and add a key beginning with `sk-` (that file is excluded by `.gitignore`).
